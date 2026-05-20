@@ -1,0 +1,9 @@
+{
+  "name": "Tehilim BeYajad",
+  "short_name": "Tehilim",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#faf6ef",
+  "theme_color": "#f5f0e7",
+  "icons": []
+}
