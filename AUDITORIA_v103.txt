@@ -1,0 +1,61 @@
+{
+  "version": "v103",
+  "chapters": {
+    "1": {
+      "title": "Shir Hashirim 1",
+      "hebrew": [
+        "Texto local pendiente de cargar."
+      ],
+      "status": "pending_text"
+    },
+    "2": {
+      "title": "Shir Hashirim 2",
+      "hebrew": [
+        "Texto local pendiente de cargar."
+      ],
+      "status": "pending_text"
+    },
+    "3": {
+      "title": "Shir Hashirim 3",
+      "hebrew": [
+        "Texto local pendiente de cargar."
+      ],
+      "status": "pending_text"
+    },
+    "4": {
+      "title": "Shir Hashirim 4",
+      "hebrew": [
+        "Texto local pendiente de cargar."
+      ],
+      "status": "pending_text"
+    },
+    "5": {
+      "title": "Shir Hashirim 5",
+      "hebrew": [
+        "Texto local pendiente de cargar."
+      ],
+      "status": "pending_text"
+    },
+    "6": {
+      "title": "Shir Hashirim 6",
+      "hebrew": [
+        "Texto local pendiente de cargar."
+      ],
+      "status": "pending_text"
+    },
+    "7": {
+      "title": "Shir Hashirim 7",
+      "hebrew": [
+        "Texto local pendiente de cargar."
+      ],
+      "status": "pending_text"
+    },
+    "8": {
+      "title": "Shir Hashirim 8",
+      "hebrew": [
+        "Texto local pendiente de cargar."
+      ],
+      "status": "pending_text"
+    }
+  }
+}
