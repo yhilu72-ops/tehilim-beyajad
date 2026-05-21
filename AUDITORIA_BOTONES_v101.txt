@@ -1,5 +1,0 @@
--- Tehilim BeYajad v102
--- No se usa IA externa ni OpenAI.
--- No se requiere Edge Function ai-gabai.
--- El contador total de lectores usa Supabase Realtime Presence y no necesita tabla nueva.
--- La ayuda inteligente dentro de sala es privada y local: no publica ni presiona a participantes.
