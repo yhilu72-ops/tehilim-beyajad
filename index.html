@@ -5510,7 +5510,7 @@ window.addEventListener("load", function(){
 
 <script>
 /* v47: kabalot, aportaciones, m\u{E1}s opciones y compartir */
-let selectedDonationTierReal = { name: "Bronce", amount: 10 };
+let selectedDonationTierReal = { name: "Bronce", amount: 180 };
 
 function selectedRoomNameReal(){ return selectedRealRoom ? (selectedRealRoom.title || selectedRealRoom.person_name || "Sala") : "Sala"; }
 function selectedRoomCategoryReal(){ return selectedRealRoom ? (categoryLabelsReal[selectedRealRoom.category] || "Sala") : "Sala"; }
@@ -5672,7 +5672,7 @@ function updateDonationPreviewReal(){
   const donor=(document.getElementById("donorNameInput")?.value||"Participante").trim() || "Participante";
   const anon=!!document.getElementById("donationAnonymousInput")?.checked;
   const room=selectedRoomNameReal();
-  box.innerHTML=`<b>${safeText(anon?"An\u{F3}nimo":donor)}</b> dedicar\u{E1} una <b>Aportaci\u{F3}n ${safeText(selectedDonationTierReal.name)}</b> de <b>$${selectedDonationTierReal.amount} USD</b> en m\u{E9}rito de <b>${safeText(room)}</b>.`;
+  box.innerHTML=`<b>${safeText(anon?"An\u{F3}nimo":donor)}</b> dedicar\u{E1} una <b>Aportaci\u{F3}n ${safeText(selectedDonationTierReal.name)}</b> de <b>$${selectedDonationTierReal.amount} MXN</b> en m\u{E9}rito de <b>${safeText(room)}</b>.`;
 }
 async function publishDonationReal(){
   try{
@@ -11671,7 +11671,7 @@ setTimeout(()=>{if(location.hash==="#seleccionar")start();},700);
     const response=await fetch(FUNCTION_URL,{
       method:"POST",
       headers,
-      body:JSON.stringify({plan:PLAN_BY_TIER[plan]||plan})
+      body:JSON.stringify({plan:PLAN_BY_TIER[plan]||plan,roomId:context?.roomId||null})
     });
 
     let data={};
@@ -11681,12 +11681,15 @@ setTimeout(()=>{if(location.hash==="#seleccionar")start();},700);
       throw new Error(detail);
     }
     if(!data.checkoutUrl) throw new Error("Mercado Pago no devolvió el enlace de pago.");
+    const checkoutUrl = new URL(data.checkoutUrl);
+    if(checkoutUrl.protocol !== "https:" || checkoutUrl.hostname !== "www.mercadopago.com.mx") throw new Error("Mercado Pago devolvió un enlace de pago no válido.");
 
     try{
       localStorage.setItem("tbj_pending_mercadopago",JSON.stringify({
         plan,
         context:context||{},
         preferenceId:data.preferenceId||null,
+        externalReference:data.externalReference||null,
         createdAt:new Date().toISOString()
       }));
     }catch(_e){}
@@ -11715,7 +11718,7 @@ setTimeout(()=>{if(location.hash==="#seleccionar")start();},700);
         return;
       }
 
-      const plan=normalizeTier(window.selectedDonationTierReal?.name||"bronce");
+      const plan=normalizeTier(selectedDonationTierReal?.name||"bronce");
       const donor=(document.getElementById("donorNameInput")?.value||"").trim();
       const message=(document.getElementById("donationMessageInput")?.value||"").trim();
       const anonymous=!!document.getElementById("donationAnonymousInput")?.checked;
@@ -11740,3 +11743,4 @@ setTimeout(()=>{if(location.hash==="#seleccionar")start();},700);
 </script>
 
 </body></html>
+
