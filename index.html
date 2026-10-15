@@ -3049,6 +3049,7 @@ section.screen.router-active{display:block!important}
     <label>Contraseña<input id="authPasswordLogin" type="password" placeholder="Contraseña" autocomplete="current-password"></label>
     <button class="btn" style="min-width:230px" onclick="v88SignIn()">Iniciar sesión</button>
     <p style="margin-top:12px"><a href="#registro" class="muted">Crear cuenta nueva</a></p>
+    <p style="margin-top:9px"><a href="#restablecer" class="muted">¿Olvidaste tu contraseña?</a></p>
     <div id="authStatusLogin" class="v88Status"></div>
   </div>
 </section>
@@ -11739,6 +11740,71 @@ setTimeout(()=>{if(location.hash==="#seleccionar")start();},700);
       if(button){ button.disabled=false; button.textContent="Continuar a Mercado Pago"; }
     }
   };
+})();
+</script>
+
+
+<section id="restablecer" class="screen">
+ <div class="top"><a class="circle" href="#login">&#8249;</a><h2>Recuperar contraseña</h2><span></span></div>
+ <div class="card center"><h3>Te enviaremos un enlace seguro</h3>
+ <p class="muted">Escribe el correo con el que te registraste.</p>
+ <label>Correo electrónico<input id="tbjRecoverEmail" type="email" autocomplete="email" placeholder="correo@ejemplo.com"></label>
+ <div class="actions centered"><button class="btn" type="button" id="tbjRecoverButton">Enviar enlace</button></div>
+ <p class="muted" id="tbjRecoverStatus" role="status" aria-live="polite"></p></div>
+</section>
+<section id="nueva_clave" class="screen">
+ <div class="top"><a class="circle" href="#login">&#8249;</a><h2>Contraseña nueva</h2><span></span></div>
+ <div class="card center"><p class="muted">Abre esta pantalla desde el enlace recibido por correo.</p>
+ <label>Nueva contraseña<input id="tbjNewPassword" type="password" autocomplete="new-password" minlength="10" placeholder="Mínimo 10 caracteres"></label>
+ <label>Repite la contraseña<input id="tbjNewPasswordAgain" type="password" autocomplete="new-password" minlength="10" placeholder="Confirma tu contraseña"></label>
+ <div class="actions centered"><button type="button" class="btn" id="tbjSetPasswordButton">Guardar contraseña</button></div>
+ <p class="muted" id="tbjNewPasswordStatus" role="status" aria-live="polite"></p></div>
+</section>
+<script id="tbjPasswordRecovery20261015">
+(function(){
+  "use strict";
+  const el=id=>document.getElementById(id);
+  const status=(id,msg)=>{const node=el(id);if(node)node.textContent=msg;};
+  el("tbjRecoverButton")?.addEventListener("click",async()=>{
+    const email=(el("tbjRecoverEmail")?.value||"").trim();
+    if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){status("tbjRecoverStatus","Escribe un correo válido.");return;}
+    const button=el("tbjRecoverButton");button.disabled=true;
+    status("tbjRecoverStatus","Enviando enlace...");
+    try{
+      if(!window.sb?.auth)throw new Error("No se pudo conectar con el servicio.");
+      const redirectTo=location.origin+location.pathname;
+      const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo});
+      if(error)throw error;
+      status("tbjRecoverStatus","Si existe una cuenta para ese correo, recibirás un enlace para cambiar la contraseña. Revisa también spam.");
+    }catch(e){status("tbjRecoverStatus","No se pudo enviar el enlace: "+(e.message||String(e)));}
+    finally{button.disabled=false;}
+  });
+  el("tbjSetPasswordButton")?.addEventListener("click",async()=>{
+    const p=el("tbjNewPassword")?.value||"";
+    const p2=el("tbjNewPasswordAgain")?.value||"";
+    if(p.length<10){status("tbjNewPasswordStatus","Usa por lo menos 10 caracteres.");return;}
+    if(p!==p2){status("tbjNewPasswordStatus","Las contraseñas no coinciden.");return;}
+    const button=el("tbjSetPasswordButton");button.disabled=true;
+    try{
+      if(!window.sb?.auth)throw new Error("No hay conexión con el servicio.");
+      const {error}=await sb.auth.updateUser({password:p});
+      if(error)throw error;
+      status("tbjNewPasswordStatus","Contraseña actualizada. Ya puedes iniciar sesión.");
+      el("tbjNewPassword").value="";el("tbjNewPasswordAgain").value="";
+      setTimeout(()=>{location.hash="#login";},1300);
+    }catch(e){status("tbjNewPasswordStatus","No se pudo cambiar la contraseña: "+(e.message||String(e)));}
+    finally{button.disabled=false;}
+  });
+  function attachRecoveryListener(){
+    if(!window.sb?.auth){setTimeout(attachRecoveryListener,600);return;}
+    try{
+      sb.auth.onAuthStateChange((event)=>{
+        if(event==="PASSWORD_RECOVERY"){location.hash="#nueva_clave";}
+      });
+      if(location.hash.includes("type=recovery"))location.hash="#nueva_clave";
+    }catch(e){}
+  }
+  attachRecoveryListener();
 })();
 </script>
 
