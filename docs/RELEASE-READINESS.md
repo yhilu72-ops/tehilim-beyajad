@@ -24,7 +24,7 @@ Fecha de trabajo: 20 de octubre de 2026. Base recuperada: a5ee9bfb0b0ca338a43fea
 - Siete pruebas de pagos con proveedor simulado: autenticación, precio, dedicatoria, anonimato, separación test/producción, límite de intentos y consulta de estado.
 - Prueba transaccional real de base de datos, con rollback: aislamiento de salas privadas, rechazo de código incorrecto, acceso de miembro, privilegio del borrado administrativo, exclusión de aportaciones de prueba, idempotencia y reembolsos.
 - Endpoints desplegados: creación de preferencia v10, webhook v11, payment-status v1 y delete-account v1. Requests sin autenticación rechazados con HTTP 401 en las tres funciones privadas.
-- Proyectos nativos generados y sincronizados; no equivalen a binarios firmados.
+- GitHub Actions completó correctamente web, Android (`assembleDebug bundleRelease`) e iOS para simulador con Xcode 26. Ejecución: https://github.com/yhilu72-ops/tehilim-beyajad/actions/runs/39370914308 . Android genera APK de prueba y AAB sin firma de distribución; iOS no genera un IPA de distribución. No equivalen a una prueba funcional en dispositivos ni a binarios firmados para tiendas.
 - El navegador de la sesión bloqueó la inspección visual por política. No se afirma una revisión visual ni una prueba completa en dispositivos.
 
 ## Pendientes que impiden llamarla lista para tiendas
@@ -33,7 +33,7 @@ Fecha de trabajo: 20 de octubre de 2026. Base recuperada: a5ee9bfb0b0ca338a43fea
 2. Implementar productos y verificación de compras para ampliaciones de cupo/tiempo en Apple y Google, o aprobar explícitamente una primera versión móvil sin cobros. No reemplazar pagos digitales con un checkout externo sin verificar reglas del mercado aplicable.
 3. Traducción española y fonética completas: obtener una edición autorizada y revisarla. No se inventaron ni incorporaron fuentes con restricción comercial para suplirlas.
 4. Completar/verificar las tres secciones no importadas del Sidur Ashkenaz y revisar los nusjaot con el responsable religioso.
-5. Compilar y probar Android e iOS, firmar con las cuentas del titular y completar fichas, capturas, privacidad, clasificación y cuentas de revisión. App Store requiere macOS/Xcode y credenciales de desarrollador; Android necesita la llave de firma.
+5. Probar funcionalmente Android e iOS en dispositivos, firmar con las cuentas del titular y completar fichas, capturas, privacidad, clasificación y cuentas de revisión. App Store requiere macOS/Xcode y credenciales de desarrollador; Android necesita la llave de firma.
 6. Operar la atención de reportes y privacidad; la existencia del botón de reporte no sustituye su revisión humana.
 
 ## Variables de producción de Mercado Pago
@@ -53,3 +53,11 @@ Configurar únicamente en secretos de Supabase: MERCADO_PAGO_ACCESS_TOKEN, MERCA
 `npm ci --ignore-scripts`, `npm run check`, `npm test`, `npm run mobile:sync`.
 Android: JDK 21, SDK 36, `cd android && ./gradlew assembleDebug bundleRelease`.
 iOS: Xcode 26+, abrir `ios/App/App.xcodeproj` y seleccionar el equipo de firma del titular.
+
+## Estado de entrega y accesos
+
+Cambios guardados en la rama `release/mobile-readiness-20261020`, PR: https://github.com/yhilu72-ops/tehilim-beyajad/pull/1 . El frontend no se fusionó ni se publicó en producción; las migraciones aditivas y cuatro funciones de Supabase sí están desplegadas.
+
+La consulta de Vercel devolvió HTTP 403 para el proyecto y equipo originales. No hay CLI Vercel autenticada disponible en esta sesión. No se pudo verificar una vista previa desplegada. La política del navegador también impidió inspeccionar la vista previa local; no se intentó eludirla.
+
+No se encontró una conexión disponible a Mercado Pago, App Store Connect ni Google Play Console. Para terminar hacen falta el vendedor real configurado en secretos del servidor, acceso de publicación/firma de las tiendas y la fuente autorizada de español/fonética. No enviar contraseñas, tokens ni certificados por chat.
