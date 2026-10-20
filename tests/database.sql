@@ -1,0 +1,26 @@
+begin;
+select set_config('test.owner',gen_random_uuid()::text,true),set_config('test.member',gen_random_uuid()::text,true),set_config('test.room',gen_random_uuid()::text,true),set_config('test.payment',gen_random_uuid()::text,true);
+insert into auth.users(id,email) values(current_setting('test.owner')::uuid,'tbj-owner-test@example.invalid'),(current_setting('test.member')::uuid,'tbj-member-test@example.invalid');
+insert into public.rooms(id,creator_id,title,category,person_name,access_type,room_code,max_members) values(current_setting('test.room')::uuid,current_setting('test.owner')::uuid,'Synthetic privacy test','refua_shelema','Test','private','TESTONLY99',100);
+set local role anon;
+do $$ begin if exists(select 1 from public.rooms where id=current_setting('test.room')::uuid) then raise exception 'Anonymous private room leak';end if;end $$;
+reset role;
+select set_config('request.jwt.claim.sub',current_setting('test.member'),true);
+set local role authenticated;
+do $$begin
+ if exists(select 1 from public.rooms where id=current_setting('test.room')::uuid) then raise exception 'Nonmember private room leak';end if;
+ begin perform public.tbj_join_room(current_setting('test.room')::uuid,'WRONG');raise exception 'Incorrect invitation admitted';exception when insufficient_privilege then null;end;
+ perform public.tbj_join_room(null,'TESTONLY99');
+ if not exists(select 1 from public.rooms where id=current_setting('test.room')::uuid) then raise exception 'Member could not read private room';end if;
+ if has_function_privilege(current_user,'public.tbj_cleanup_account(uuid)','execute') then raise exception 'App can invoke admin cleanup';end if;
+end $$;
+reset role;
+insert into public.mercadopago_payments(id,external_reference,plan,amount_expected,currency,status,user_id,room_id,metadata) values(current_setting('test.payment')::uuid,current_setting('test.payment'),'bronce',180,'MXN','approved',current_setting('test.member')::uuid,current_setting('test.room'),'{"environment":"sandbox","donor_name":"Synthetic","message":"Test"}');
+do $$begin if exists(select 1 from public.room_contributions where payment_id=current_setting('test.payment')::uuid) then raise exception 'Sandbox contribution published';end if;end $$;
+update public.mercadopago_payments set metadata=metadata||'{"environment":"production"}'::jsonb where id=current_setting('test.payment')::uuid;
+update public.mercadopago_payments set status='approved' where id=current_setting('test.payment')::uuid;
+do $$begin if (select count(*) from public.room_contributions where payment_id=current_setting('test.payment')::uuid and published)<>1 then raise exception 'Contribution not idempotent';end if;end $$;
+update public.mercadopago_payments set status='refunded' where id=current_setting('test.payment')::uuid;
+do $$begin if exists(select 1 from public.room_contributions where payment_id=current_setting('test.payment')::uuid and published) then raise exception 'Refund still published';end if;end $$;
+select 'PASS: private room isolation, invitation access, admin cleanup privilege, sandbox exclusion, contribution idempotency and refunds' as verification;
+rollback;
