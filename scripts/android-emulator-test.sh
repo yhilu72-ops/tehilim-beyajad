@@ -29,6 +29,9 @@ adb shell appops set com.tehilimbeyajad.app SCHEDULE_EXACT_ALARM allow
 adb shell svc wifi disable
 adb shell svc data disable
 (cd android && ./gradlew :app:connectedDebugAndroidTest --no-daemon)
-adb shell am start -n com.tehilimbeyajad.app/.MainActivity
+# Gradle's test runner uninstalls the tested app during cleanup.
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+adb shell am start -W -n com.tehilimbeyajad.app/.MainActivity
+sleep 3
 mkdir -p artifacts
 adb exec-out screencap -p > artifacts/android-emulator-start.png
