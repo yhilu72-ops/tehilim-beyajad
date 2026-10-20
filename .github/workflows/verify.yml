@@ -8,6 +8,7 @@ permissions:
 jobs:
   web:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -20,6 +21,7 @@ jobs:
       - run: npm run check && npm test && npm run build
   android:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -48,6 +50,7 @@ jobs:
           retention-days: 7
   ios:
     runs-on: macos-26
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -59,6 +62,7 @@ jobs:
       - run: npm ci --ignore-scripts && npm run mobile:sync
       - run: xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/ios CODE_SIGNING_ALLOWED=NO build
       - run: bash scripts/ios-simulator-smoke.sh build/ios/Build/Products/Debug-iphonesimulator/App.app
+        timeout-minutes: 6
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: ios-simulator-build

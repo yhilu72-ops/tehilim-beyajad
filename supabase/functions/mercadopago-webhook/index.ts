@@ -277,7 +277,7 @@ Deno.serve(async (req: Request) => {
 
     // Seguridad: el pago debe pertenecer al seller esperado.
     const environment = Deno.env.get("MERCADO_PAGO_ENVIRONMENT") === "production" ? "production" : "sandbox";
-    const expectedCollectorId = environment === "production" ? Number(Deno.env.get("MERCADO_PAGO_COLLECTOR_ID")) : 3546561536;
+    const expectedCollectorId = environment === "production" ? Number(Deno.env.get("MERCADO_PAGO_COLLECTOR_ID")) : Number(Deno.env.get("MERCADO_PAGO_TEST_COLLECTOR_ID") || "3546561536");
     if (Number(payment.collector_id) !== expectedCollectorId) {
       await updateWebhookEvent(
         "ignored_wrong_collector",

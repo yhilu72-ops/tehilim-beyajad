@@ -6,8 +6,8 @@ sdkmanager 'platform-tools' 'emulator' 'system-images;android-35;google_apis;x86
 printf 'no\n' | avdmanager create avd --name tehilim-ci --package 'system-images;android-35;google_apis;x86_64' --device pixel_6 --force >/dev/null
 if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
 "$ANDROID_HOME/emulator/emulator" -avd tehilim-ci -no-window -noaudio -no-snapshot -no-boot-anim -gpu swiftshader_indirect > /tmp/tehilim-emulator.log 2>&1 &
-trap 'adb emu kill >/dev/null 2>&1 || true' EXIT
-adb wait-for-device
+trap 'result=$?; if [ $result -ne 0 ]; then cat /tmp/tehilim-emulator.log; fi; adb emu kill >/dev/null 2>&1 || true' EXIT
+timeout 120 adb wait-for-device
 booted=false
 for i in $(seq 1 120); do
   if [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = '1' ]; then booted=true; break; fi
