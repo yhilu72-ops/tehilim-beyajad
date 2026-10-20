@@ -61,3 +61,12 @@ Cambios guardados en la rama `release/mobile-readiness-20261020`, PR: https://gi
 La consulta de Vercel devolvió HTTP 403 para el proyecto y equipo originales. No hay CLI Vercel autenticada disponible en esta sesión. No se pudo verificar una vista previa desplegada. La política del navegador también impidió inspeccionar la vista previa local; no se intentó eludirla.
 
 No se encontró una conexión disponible a Mercado Pago, App Store Connect ni Google Play Console. Para terminar hacen falta el vendedor real configurado en secretos del servidor, acceso de publicación/firma de las tiendas y la fuente autorizada de español/fonética. No enviar contraseñas, tokens ni certificados por chat.
+
+## Continuación: integridad de salas y fichas
+
+- Se unificaron las dos referencias históricas de sala activa. Unirse, salir o eliminar una sala ya no deja una referencia distinta entre pantallas.
+- Las pantallas y banners antiguos de aportaciones consultan exclusivamente `room_contributions` publicado. No recurren a dedicatorias locales ni a tablas heredadas sin confirmación de pago.
+- Al cerrar sesión se elimina la restauración local de sala y se invalidan consultas pendientes; una respuesta tardía de otra sala no se muestra.
+- Se agregaron seis pruebas de regresión; las 13 pruebas locales pasan, junto con validación de textos y sincronización nativa.
+- Ficha española y notas de revisión preparadas en `store/`; no enviadas a Apple ni Google.
+- GitHub informó `Vercel: success` para el commit 6ea94f0. Esto confirma una compilación/vista previa automática, no el despliegue de la rama principal ni una revisión visual.

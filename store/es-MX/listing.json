@@ -1,0 +1,11 @@
+{
+  "name": "Tehilim BeYajad",
+  "subtitle": "Tehilim y oración en comunidad",
+  "short_description": "Lee Tehilim y comparte la lectura en salas con tu comunidad.",
+  "description": "Un espacio para leer Tehilim y organizar la lectura junto con familiares, amigos y comunidad.\n\n• Lee los 150 capítulos de Tehilim en hebreo, con traducción inglesa opcional.\n• Ajusta el tamaño de letra y el modo noche para tu lectura personal.\n• Crea una sala o únete mediante un código de invitación.\n• Reserva capítulos y registra los que ya leíste para coordinar la lectura compartida.\n• Consulta Shir Hashirim, Tikun Haklali, Perek Shira y selecciones de sidur según el nusaj.\n• Accede a los textos incluidos sin conexión. Las salas y la cuenta requieren internet.\n\nLa interfaz está en español. Los textos de oración se presentan en hebreo; Tehilim también incluye traducción inglesa. No incluye traducción española ni fonética completas.\n\nLa lectura personal no requiere una cuenta. Para participar en salas, crea una cuenta o inicia sesión. Puedes reportar contenido, bloquear participantes y solicitar la eliminación de tu cuenta desde la aplicación.\n\nLas aportaciones y ampliaciones de pago no están disponibles en esta versión móvil.",
+  "keywords": "Tehilim,salmos,oración,Torá,sidur,hebreo,comunidad,lectura",
+  "support_email": "yhilu72@gmail.com",
+  "privacy_url_pending_deployment": "https://tehilim-beyajad.vercel.app/privacy.html",
+  "account_deletion_url_pending_deployment": "https://tehilim-beyajad.vercel.app/delete-account.html",
+  "publication_status": "draft_not_submitted"
+}
