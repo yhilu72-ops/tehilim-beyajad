@@ -21,14 +21,14 @@ if [ "$booted" != true ]; then cat /tmp/tehilim-emulator.log; exit 1; fi
 adb shell input keyevent 82
 # Rebuild under the same Android user directory used by connected tests.
 # Otherwise Gradle generates a second debug key and cannot replace the installed APK.
-(cd android && ./gradlew assembleDebug assembleDebugAndroidTest --no-daemon)
+(cd android && ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --no-daemon)
 adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 adb shell pm grant com.tehilimbeyajad.app android.permission.POST_NOTIFICATIONS
 adb shell appops set com.tehilimbeyajad.app SCHEDULE_EXACT_ALARM allow
 # Offline startup must read packaged content, not depend on the Vercel site.
 adb shell svc wifi disable
 adb shell svc data disable
-(cd android && ./gradlew connectedDebugAndroidTest --no-daemon)
+(cd android && ./gradlew :app:connectedDebugAndroidTest --no-daemon)
 adb shell am start -n com.tehilimbeyajad.app/.MainActivity
 mkdir -p artifacts
 adb exec-out screencap -p > artifacts/android-emulator-start.png
