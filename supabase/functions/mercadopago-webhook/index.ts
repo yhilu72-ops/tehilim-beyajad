@@ -389,7 +389,7 @@ Deno.serve(async (req: Request) => {
     const amountExpected = Number(pendingPayment.amount_expected);
 
     if (
-      !Number.isFinite(amountReceived) ||
+      !Number.isFinite(amountReceived) || !Number.isFinite(amountExpected) || amountExpected <= 0 ||
       Math.abs(amountReceived - amountExpected) > 0.001
     ) {
       validationErrors.push(
@@ -423,40 +423,8 @@ Deno.serve(async (req: Request) => {
     if (validationErrors.length > 0) {
       const validationDetail = validationErrors.join("|");
 
-      const updateData: Record<string, unknown> = {
-        amount_received: Number.isFinite(amountReceived)
-          ? amountReceived
-          : null,
-        status: "validation_error",
-        status_detail: validationDetail,
-        payer_email: payerEmail,
-        raw_payment: payment,
-      };
-
-      if (
-        !validationErrors.includes(
-          "record_already_has_another_payment_id",
-        ) &&
-        !validationErrors.includes(
-          "payment_id_already_used_by_another_record",
-        )
-      ) {
-        updateData.provider_payment_id = paymentId;
-      }
-
-      const { error } = await supabaseAdmin
-        .from("mercadopago_payments")
-        .update(updateData)
-        .eq("id", pendingPayment.id);
-
-      if (error) {
-        await updateWebhookEvent(
-          "validation_update_error",
-          error.message,
-        );
-        throw new Error(error.message);
-      }
-
+      // Invalid notifications are audit events, never payment state changes.
+      // A mismatched second payment must not revoke a verified contribution.
       await updateWebhookEvent("validation_error", validationDetail);
 
       return jsonResponse({
