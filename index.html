@@ -3995,7 +3995,7 @@ section.screen.router-active{display:block!important}
 
 
 
-<section id="recordatorios" class="screen"><div class="top"><a class="circle" href="#lectura">‹</a><h2>Recordatorios</h2></div><div class="card"><label>Lectura de la mañana<input id="tbjReminderMorning" type="time" value="08:00"></label><label>Lectura de la noche<input id="tbjReminderEvening" type="time" value="22:30"></label><p class="muted">De domingo a jueves, en la hora local del teléfono. No se programan avisos los viernes ni los sábados. Puedes desactivarlos antes de Yom Tov. El sistema del teléfono puede retrasar los avisos.</p><div class="actions"><button id="tbjReminderSave" class="btn">Activar recordatorios</button><button id="tbjReminderOff" class="btn soft">Desactivar</button></div><p id="tbjReminderStatus" role="status" aria-live="polite"></p></div></section>
+<section id="recordatorios" class="screen"><div class="top"><a class="circle" href="#lectura">‹</a><h2>Recordatorios</h2></div><div class="card"><label>Lectura de la mañana<input id="tbjReminderMorning" type="time" value="08:00"></label><label>Lectura de la noche<input id="tbjReminderEvening" type="time" value="22:30"></label><label><input id="tbjReminderPending" type="checkbox"> Avisarme también de capítulos pendientes</label><p class="muted">Los avisos de capítulos se actualizan al abrir la app con conexión y al confirmar una lectura. No muestran nombres ni datos de las salas.</p><p class="muted">De domingo a jueves, en la hora local del teléfono. No se programan avisos los viernes ni los sábados. Puedes desactivarlos antes de Yom Tov. El sistema del teléfono puede retrasar los avisos.</p><div class="actions"><button id="tbjReminderSave" class="btn">Activar recordatorios</button><button id="tbjReminderOff" class="btn soft">Desactivar</button></div><p id="tbjReminderStatus" role="status" aria-live="polite"></p></div></section>
 
 
 <section id="buenos_deseos" class="screen">
@@ -10841,13 +10841,13 @@ let shabbatBusy=false;
 window.claimShabbatChaptersV123=async function(){
  const st=$("#shabbatStatusV123");if(shabbatBusy)return;if(!selectedShabbat.size){if(st)st.textContent="Selecciona capítulos para Shabbat.";return;}
  shabbatBusy=true;try{const failed=[];for(const ch of selectedShabbat){const r=await shabbatRpc("tbj_seat_reserve",{p_chapter_number:ch});if(!r.ok)failed.push(ch);}
- const r=await shabbatRpc("tbj_seat_confirm");if(!r.ok)throw Error("No se pudo confirmar la reserva.");selectedShabbat.clear();await loadShabbat();
+ const r=await shabbatRpc("tbj_seat_confirm");if(!r.ok)throw Error("No se pudo confirmar la reserva.");selectedShabbat.clear();window.dispatchEvent(new Event("tbj:chapters-changed"));await loadShabbat();
  if(st)st.textContent=(r.chapters.length?"Apartados para Shabbat: "+r.chapters.join(", ")+".":"No se apartaron capítulos nuevos.")+(failed.length?" Ya ocupados: "+failed.join(", ")+".":"");
  }catch(e){if(st)st.textContent=e.message;}finally{shabbatBusy=false;}
 };
 window.completeShabbatChaptersV123=async function(){
  const st=$("#shabbatStatusV123");if(shabbatBusy)return;shabbatBusy=true;
- try{const r=await shabbatRpc("tbj_seat_complete");if(!r.ok)throw Error("No se pudo confirmar la lectura.");await loadShabbat();if(st)st.textContent=r.chapters.length?"Confirmados: "+r.chapters.join(", ")+".":"No tienes capítulos pendientes para Shabbat.";}catch(e){if(st)st.textContent=e.message;}finally{shabbatBusy=false;}
+ try{const r=await shabbatRpc("tbj_seat_complete");if(!r.ok)throw Error("No se pudo confirmar la lectura.");window.dispatchEvent(new Event("tbj:chapters-changed"));await loadShabbat();if(st)st.textContent=r.chapters.length?"Confirmados: "+r.chapters.join(", ")+".":"No tienes capítulos pendientes para Shabbat.";}catch(e){if(st)st.textContent=e.message;}finally{shabbatBusy=false;}
 };
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#shabbatChapterGridV123 [data-shabbat-ch]"); if(!b||b.disabled)return; e.preventDefault();e.stopImmediatePropagation(); const ch=Number(b.getAttribute("data-shabbat-ch")); selectedShabbat.has(ch)?selectedShabbat.delete(ch):selectedShabbat.add(ch); loadShabbat(); return false},true)
 async function isOwner(){const room=getRoom(), u=await user(); if(!room||!u)return false; await round(room); const owner=activeRoom&&(activeRoom.created_by||activeRoom.user_id||activeRoom.owner_id); return !!(owner&&owner===u.id)}
@@ -11180,6 +11180,7 @@ async function rpc(name,args){
     }
     throw new Error(message);
   }
+  if(["tbj_seat_confirm","tbj_seat_complete"].includes(name))window.dispatchEvent(new Event("tbj:chapters-changed"));
   return normalizeJson(result.data);
 }
 
@@ -11572,6 +11573,9 @@ setTimeout(()=>{if(location.hash==="#seleccionar")start();},700);
 
 <script src="assets/capacitor-core.js"></script>
 <script src="assets/local-notifications.js"></script>
+<script src="assets/app-plugin.js"></script>
+<script src="assets/share-plugin.js"></script>
+<script src="assets/native.js"></script>
 <script src="assets/reminders.js"></script>
 <script src="assets/release.js"></script>
 <script src="assets/room-integrity.js"></script>

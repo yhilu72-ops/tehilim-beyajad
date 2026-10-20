@@ -5,6 +5,8 @@ for(const name of ['index.html','manifest.json','tehilim.json','tikun_klali.json
 await cp('node_modules/@supabase/supabase-js/dist/umd/supabase.js','dist/assets/supabase.js');
 await cp('node_modules/@capacitor/core/dist/capacitor.js','dist/assets/capacitor-core.js');
 await cp('node_modules/@capacitor/local-notifications/dist/plugin.js','dist/assets/local-notifications.js');
+await cp('node_modules/@capacitor/app/dist/plugin.js','dist/assets/app-plugin.js');
+await cp('node_modules/@capacitor/share/dist/plugin.js','dist/assets/share-plugin.js');
 const paths=[];async function walk(dir){for(const item of await readdir(dir,{withFileTypes:true})){const p=`${dir}/${item.name}`;if(item.isDirectory())await walk(p);else paths.push(p.replace('dist/','./'));}}await walk('dist');
 const version=createHash('sha256');for(const p of paths)version.update(await readFile(p.replace('./','dist/')));
 const cache='tbj-'+version.digest('hex').slice(0,12);

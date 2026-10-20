@@ -35,12 +35,16 @@ jobs:
       - run: npm ci --ignore-scripts && npm run mobile:sync
       - run: ./gradlew assembleDebug bundleRelease --no-daemon
         working-directory: android
+      - run: bash scripts/android-emulator-test.sh
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
         with:
           name: android-test-builds
           path: |
             android/app/build/outputs/apk/debug/*.apk
             android/app/build/outputs/bundle/release/*.aab
+            android/app/build/reports/androidTests/
+            artifacts/android-emulator-start.png
           retention-days: 7
   ios:
     runs-on: macos-26
@@ -53,4 +57,12 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci --ignore-scripts && npm run mobile:sync
-      - run: xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+      - run: xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/ios CODE_SIGNING_ALLOWED=NO build
+      - run: bash scripts/ios-simulator-smoke.sh build/ios/Build/Products/Debug-iphonesimulator/App.app
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ios-simulator-build
+          path: |
+            artifacts/ios-simulator-start.png
+            build/ios/Build/Products/Debug-iphonesimulator/App.app
+          retention-days: 7
