@@ -14,7 +14,7 @@ function pendingNotifications(times,count,now=new Date()){
  return times.map((time,i)=>{const [h,m]=time.split(':').map(Number),at=new Date(now);at.setHours(h,m,0,0);
  if(at<=now)at.setDate(at.getDate()+1);
  while(at.getDay()===5||at.getDay()===6)at.setDate(at.getDate()+1);
- return {id:pendingIds[i],title:'Tehilim BeYajad',body:'Revisa si te quedan capítulos pendientes en tus salas.',schedule:{at},extra:{route:'#mis_salas'}};});
+ return {id:pendingIds[i],title:'Tehilim BeYajad',body:'Revisa si te quedan capítulos pendientes en tus salas.',schedule:{at},extra:{route:'#mis_reales'}};});
 }
 async function replace(plugin,items,owned){
  await plugin.cancel({notifications:owned.map(id=>({id}))});
@@ -67,7 +67,7 @@ async function action(fn){save.disabled=off.disabled=true;try{await fn();}catch(
 save.addEventListener('click',()=>action(async()=>{const times=['tbjReminderMorning','tbjReminderEvening'].map(id=>document.getElementById(id).value);validTimes(times);config.enabled=false;persist();++revision;await queue.catch(()=>{});await disable(plugin);await enable(plugin,times);config={morning:times[0],evening:times[1],enabled:true,pending:!!pendingToggle?.checked};persist();await refreshPending();status.textContent='Recordatorios programados de domingo a jueves, según la hora de este teléfono.';}));
 off.addEventListener('click',()=>action(async()=>{config.enabled=false;persist();++revision;await queue.catch(()=>{});await disable(plugin);status.textContent='Recordatorios desactivados.';}));
 plugin.getPending().then(r=>{const count=r.notifications.filter(n=>ids.includes(n.id)).length;status.textContent=count?'Hay '+count+' avisos semanales programados en este teléfono.':'No hay recordatorios programados.';}).catch(()=>{status.textContent='No se pudo consultar el estado de los recordatorios.';});
-plugin.addListener('localNotificationActionPerformed',event=>{const route=event.notification?.extra?.route;location.hash=route==='#mis_salas'?route:'#lectura';});
+plugin.addListener('localNotificationActionPerformed',event=>{const route=event.notification?.extra?.route;location.hash=route==='#mis_reales'?route:'#lectura';});
 for(const event of ['tbj:chapters-changed','tbj:resume','online'])window.addEventListener(event,()=>refreshPending().catch(e=>{status.textContent=e.message;}));
 sb.auth.onAuthStateChange(()=>{setTimeout(()=>refreshPending().catch(()=>{}),0);});
 refreshPending().catch(()=>{});

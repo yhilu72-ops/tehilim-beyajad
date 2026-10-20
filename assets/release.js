@@ -49,7 +49,7 @@ if(invitation){const code=decodeURIComponent(invitation[1]);sessionStorage.setIt
 
 // No fake successful purchase screens or legacy payment handlers.
 document.addEventListener('click',e=>{const a=e.target.closest('a[href="#cupo_ampliado"]');if(a){e.preventDefault();e.stopImmediatePropagation();location.hash='#ampliar_cupo';}},true);
-if(native){for(const a of document.querySelectorAll('a[href="#donativos"],a[href="#donar"],a[href="#ampliar_cupo"]'))a.hidden=true;}
+if(native){for(const a of document.querySelectorAll('a[href="#donativos"],a[href="#donar"],a[href="#dedicar_sala"],a[href="#ampliar_cupo"]'))a.hidden=true;}
 if(!native&&'serviceWorker'in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 const offline=document.createElement('div');offline.id='tbjOffline';offline.setAttribute('role','status');offline.textContent='Sin conexión: puedes continuar tus lecturas guardadas. Las salas requieren internet.';document.body.append(offline);function online(){offline.hidden=navigator.onLine;}window.addEventListener('online',online);window.addEventListener('offline',online);online();
 })();
