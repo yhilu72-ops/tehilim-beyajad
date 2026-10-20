@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+: "${ANDROID_HOME:?Android SDK required}"
+export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+export ANDROID_USER_HOME="${RUNNER_TEMP:-/tmp}/tehilim-android"
+export ANDROID_AVD_HOME="$ANDROID_USER_HOME/avd"
+mkdir -p "$ANDROID_AVD_HOME"
+sdkmanager 'platform-tools' 'emulator' 'system-images;android-35;google_apis;x86_64' >/dev/null
+printf 'no\n' | avdmanager create avd --name tehilim-ci --package 'system-images;android-35;google_apis;x86_64' --device pixel_6 --path "$ANDROID_AVD_HOME/tehilim-ci.avd" --force
+test -f "$ANDROID_AVD_HOME/tehilim-ci.ini"
+if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+"$ANDROID_HOME/emulator/emulator" -avd tehilim-ci -no-window -noaudio -no-snapshot -no-boot-anim -gpu swiftshader_indirect > /tmp/tehilim-emulator.log 2>&1 &
+trap 'result=$?; if [ $result -ne 0 ]; then cat /tmp/tehilim-emulator.log; fi; adb emu kill >/dev/null 2>&1 || true' EXIT
+timeout 120 adb wait-for-device
+booted=false
+for i in $(seq 1 120); do
+  if [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = '1' ]; then booted=true; break; fi
+  sleep 2
+done
+if [ "$booted" != true ]; then cat /tmp/tehilim-emulator.log; exit 1; fi
+adb shell input keyevent 82
+# Rebuild under the same Android user directory used by connected tests.
+# Otherwise Gradle generates a second debug key and cannot replace the installed APK.
+(cd android && ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --no-daemon)
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+adb shell pm grant com.tehilimbeyajad.app android.permission.POST_NOTIFICATIONS
+adb shell appops set com.tehilimbeyajad.app SCHEDULE_EXACT_ALARM allow
+# Offline startup must read packaged content, not depend on the Vercel site.
+adb shell svc wifi disable
+adb shell svc data disable
+(cd android && ./gradlew :app:connectedDebugAndroidTest --no-daemon)
+# Gradle's test runner uninstalls the tested app during cleanup.
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+adb shell am start -W -n com.tehilimbeyajad.app/.MainActivity
+sleep 3
+mkdir -p artifacts
+adb exec-out screencap -p > artifacts/android-emulator-start.png

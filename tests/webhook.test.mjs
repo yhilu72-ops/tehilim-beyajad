@@ -5,11 +5,11 @@ import {stripTypeScriptTypes} from 'node:module';
 import {createHmac} from 'node:crypto';
 import vm from 'node:vm';
 
-async function fixture({payment={},record={},environment='sandbox'}={}) {
+async function fixture({payment={},record={},environment='sandbox',testCollector='3546561536'}={}) {
   let handler; const writes=[], lookups=[];
   const row={id:'row',external_reference:'ref',amount_expected:180,currency:'MXN',plan:'bronce',status:'approved',provider_payment_id:'123',metadata:{environment},...record};
   const provider={id:123,external_reference:'ref',collector_id:3546561536,transaction_amount:180,currency_id:'MXN',status:'approved',metadata:{project:'tehilim-beyajad',plan:'bronce'},...payment};
-  const env={SUPABASE_URL:'https://example.test',SUPABASE_SERVICE_ROLE_KEY:'admin-test',MERCADO_PAGO_ACCESS_TOKEN:'fake',MERCADO_PAGO_WEBHOOK_SECRET:'signature-test',MERCADO_PAGO_ENVIRONMENT:environment,MERCADO_PAGO_COLLECTOR_ID:'3546561536'};
+  const env={SUPABASE_URL:'https://example.test',SUPABASE_SERVICE_ROLE_KEY:'admin-test',MERCADO_PAGO_ACCESS_TOKEN:'fake',MERCADO_PAGO_WEBHOOK_SECRET:'signature-test',MERCADO_PAGO_ENVIRONMENT:environment,MERCADO_PAGO_COLLECTOR_ID:'3546561536',MERCADO_PAGO_TEST_COLLECTOR_ID:testCollector};
   const db={from(table){let filters={};const q={insert(data){writes.push({table,data,action:'insert'});return q;},update(data){writes.push({table,data,action:'update'});return q;},select(){return q;},eq(k,v){filters[k]=v;return q;},single:async()=>({data:{id:'event'},error:null}),maybeSingle:async()=>({data:filters.external_reference?(filters.external_reference==='ref'?row:null):{id:'row'},error:null}),then(resolve){return Promise.resolve({error:null}).then(resolve);}};return q;}};
   const source=await readFile('supabase/functions/mercadopago-webhook/index.ts','utf8');
   vm.runInNewContext(stripTypeScriptTypes(source.replace(/^\s*import .*;\n/,'')),{Deno:{env:{get:k=>env[k]},serve:f=>handler=f},createClient:()=>db,crypto,TextEncoder,Request,Response,URL,console:{log(){},error(){}},fetch:async url=>{lookups.push(url);return new Response(JSON.stringify(provider));}});
@@ -23,3 +23,5 @@ for(const [name,payment,record] of [
 for(const status of ['approved','pending','rejected','refunded','charged_back']) test(`Verified provider status ${status} is persisted`,async()=>{const f=await fixture({payment:{status}});const result=await (await f.handler(f.request())).json();assert.equal(result.processed,true);assert.equal(f.writes.find(w=>w.table==='mercadopago_payments').data.status,status);});
 test('Production refuses a non-live payment',async()=>{const f=await fixture({environment:'production',payment:{live_mode:false}});assert.equal((await (await f.handler(f.request())).json()).processed,false);assert.equal(f.writes.filter(w=>w.table==='mercadopago_payments').length,0);});
 test('Diagnostic rejects anon and ordinary user tokens before privileged access',async()=>{let handler;const source=await readFile('supabase/functions/diagnose-mercadopago/index.ts','utf8');vm.runInNewContext(stripTypeScriptTypes(source.replace(/^import .*;\n/,'')),{Deno:{env:{get:k=>k==='SUPABASE_SERVICE_ROLE_KEY'?'admin-test':undefined},serve:f=>handler=f},Response,createClient:()=>{throw Error('must not query database');}});for(const token of ['','anon-test','user-test']) assert.equal((await handler(new Request('https://example.test',{method:'POST',headers:{Authorization:`Bearer ${token}`}}))).status,403);});
+
+test('Configured sandbox seller is enforced by webhook too',async()=>{const f=await fixture({testCollector:'98765',payment:{collector_id:98765}});assert.equal((await (await f.handler(f.request())).json()).processed,true);const bad=await fixture({testCollector:'98765'});assert.equal((await (await bad.handler(bad.request())).json()).processed,false);});

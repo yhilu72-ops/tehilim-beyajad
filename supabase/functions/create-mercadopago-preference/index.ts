@@ -15,6 +15,7 @@ type PlanName =
 
 type RequestBody = {
   plan?: string;
+  requestId?: string;
   roomId?: string | null;
   donorName?: string;
   message?: string;
@@ -199,6 +200,10 @@ Deno.serve(async (req: Request) => {
     const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
     if (authError || !authData.user) return jsonResponse({error:"Inicia sesión para hacer una aportación."},401);
     const user = authData.user;
+    // The same logical attempt survives double taps, reconnects and app restarts.
+    const requestId = body.requestId || null;
+    if(requestId && !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId))
+      return jsonResponse({error:"Identificador de aportación no válido."},400);
     const donorName = body.anonymous ? "" : String(body.donorName || "").trim().slice(0,100);
     const message = String(body.message || "").trim().slice(0,500);
     if (roomId) {
@@ -206,11 +211,8 @@ Deno.serve(async (req: Request) => {
       const {data:member} = await supabaseAdmin.from("room_members").select("user_id").eq("room_id",roomId).eq("user_id",user.id).maybeSingle();
       if(error || !room || room.deleted || !room.active || (room.creator_id !== user.id && !member)) return jsonResponse({error:"Únete a la sala antes de hacer una aportación."},403);
     }
-    const {count,error:countError} = await supabaseAdmin.from("mercadopago_payments").select("id",{count:"exact",head:true}).eq("user_id",user.id).gte("created_at",new Date(Date.now()-60000).toISOString());
-    if(countError) throw countError;
-    if((count||0)>=3) return jsonResponse({error:"Espera un minuto antes de intentar de nuevo."},429);
     const environment = Deno.env.get("MERCADO_PAGO_ENVIRONMENT") === "production" ? "production" : "sandbox";
-    const expectedCollector = environment === "production" ? Deno.env.get("MERCADO_PAGO_COLLECTOR_ID") : "3546561536";
+    const expectedCollector = environment === "production" ? Deno.env.get("MERCADO_PAGO_COLLECTOR_ID") : (Deno.env.get("MERCADO_PAGO_TEST_COLLECTOR_ID") || "3546561536");
     if(!expectedCollector) return jsonResponse({error:"Los cobros reales aún no están configurados."},503);
     const ownerResponse = await fetch("https://api.mercadopago.com/users/me", {
       headers: { Authorization: `Bearer ${mercadoPagoAccessToken}` }, signal: AbortSignal.timeout(10000),
@@ -222,6 +224,28 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({error:"La cuenta de Mercado Pago no coincide con el entorno configurado.",code:"SELLER_CONFIGURATION_MISMATCH",checks:{environment,collectorMatches:String(owner.id)===expectedCollector,mexicanAccount:owner.site_id==="MLM",testAccount:isTest}},409);
     }
 
+    const fingerprint = JSON.stringify({plan,roomId,donorName,message,anonymous:!!body.anonymous,environment,collector:String(owner.id)});
+    async function existingAttempt(): Promise<Response | null> {
+      if(!requestId)return null; // Compatibility with installed earlier versions.
+      const {data:previous,error} = await supabaseAdmin.from("mercadopago_payments")
+        .select("external_reference,request_fingerprint,checkout_url,preference_id,provider_payment_id,status,status_detail,amount_expected,currency,metadata")
+        .eq("user_id",user.id).eq("request_key",requestId).maybeSingle();
+      if(error)throw error;
+      if(!previous)return null;
+      if(previous.request_fingerprint!==fingerprint)return jsonResponse({error:"Este intento ya corresponde a otra aportación.",code:"REQUEST_CONFLICT"},409);
+      if(previous.status!=="pending" || previous.provider_payment_id)
+        return jsonResponse({error:"Consulta el estado de esta aportación antes de iniciar otra.",code:"PAYMENT_ALREADY_PROCESSED",externalReference:previous.external_reference},409);
+      if(previous.preference_id && previous.checkout_url) {
+        const destination=new URL(previous.checkout_url);
+        if(destination.protocol!=="https:" || destination.hostname!=="www.mercadopago.com.mx")throw Error("Destino de pago inválido.");
+        return jsonResponse({preferenceId:previous.preference_id,externalReference:previous.external_reference,checkoutUrl:previous.checkout_url,environment,amount:Number(previous.amount_expected),currency:previous.currency,plan,reused:true});
+      }
+      return jsonResponse({error:"Este intento sigue en verificación. No se creará un segundo cobro. Consulta su estado antes de volver a intentarlo.",code:"CHECKOUT_IN_PROGRESS",externalReference:previous.external_reference},409);
+    }
+    const previous=await existingAttempt();if(previous)return previous;
+    const {count,error:countError} = await supabaseAdmin.from("mercadopago_payments").select("id",{count:"exact",head:true}).eq("user_id",user.id).gte("created_at",new Date(Date.now()-60000).toISOString());
+    if(countError) throw countError;
+    if((count||0)>=3) return jsonResponse({error:"Espera un minuto antes de intentar de nuevo."},429);
     const contributionId =
       crypto.randomUUID();
 
@@ -234,6 +258,8 @@ Deno.serve(async (req: Request) => {
       .from("mercadopago_payments")
       .insert({
         id: contributionId,
+        request_key: requestId,
+        request_fingerprint: requestId ? fingerprint : null,
         provider_payment_id: null,
         preference_id: null,
         external_reference:
@@ -255,6 +281,7 @@ Deno.serve(async (req: Request) => {
       });
 
     if (insertError) {
+      if(insertError.code==="23505" && requestId){const winner=await existingAttempt();if(winner)return winner;}
       throw new Error(
         `No se pudo registrar la aportación: ${insertError.message}`,
       );
@@ -340,6 +367,7 @@ Deno.serve(async (req: Request) => {
           body: JSON.stringify(
             preferencePayload,
           ),
+          signal: AbortSignal.timeout(15000),
         },
       );
 
@@ -418,6 +446,7 @@ Deno.serve(async (req: Request) => {
       .update({
         preference_id:
           preferenceId,
+        checkout_url: checkoutUrl,
         status: "pending",
         status_detail:
           "preference_created",
@@ -454,9 +483,7 @@ Deno.serve(async (req: Request) => {
     return jsonResponse(
       {
         error:
-          error instanceof Error
-            ? error.message
-            : "Ocurrió un error inesperado",
+          "No se pudo completar la solicitud. Consulta el estado de tu aportación antes de reintentar.",
       },
       500,
     );

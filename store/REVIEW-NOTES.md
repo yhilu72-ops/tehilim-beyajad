@@ -1,5 +1,7 @@
 # Preparación de fichas — no enviadas a las tiendas
 
+Entrega principal: app para iPhone y Android. Consulte [NATIVE-DISTRIBUTION.md](NATIVE-DISTRIBUTION.md) para compilación, firma, pruebas nativas y cobros.
+
 El contenido de `es-MX/listing.json` describe únicamente las funciones de la compilación actual. Los enlaces de privacidad y eliminación deben verificarse tras desplegar el frontend. No presentar el sidur como una edición completa revisada ni anunciar español/fonética, cobros móviles o ampliaciones aún no implementadas.
 
 ## Información para la revisión

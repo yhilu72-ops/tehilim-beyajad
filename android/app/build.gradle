@@ -1,5 +1,13 @@
 apply plugin: 'com.android.application'
 
+// No distribution secrets are kept in source control.
+def signingPath = System.getenv('TBJ_ANDROID_KEYSTORE_PATH')
+def releaseBuildNumber = (System.getenv('TBJ_BUILD_NUMBER') ?: '2').toInteger()
+if (releaseBuildNumber < 2) throw new GradleException('TBJ_BUILD_NUMBER must be at least 2')
+if (signingPath && ['TBJ_ANDROID_STORE_PASSWORD','TBJ_ANDROID_KEY_ALIAS','TBJ_ANDROID_KEY_PASSWORD'].any { !System.getenv(it) }) {
+    throw new GradleException('Incomplete Android release signing environment')
+}
+
 android {
     namespace = "com.tehilimbeyajad.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +15,8 @@ android {
         applicationId "com.tehilimbeyajad.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode releaseBuildNumber
+        versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +24,19 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (signingPath) {
+            release {
+                storeFile file(signingPath)
+                storePassword System.getenv('TBJ_ANDROID_STORE_PASSWORD')
+                keyAlias System.getenv('TBJ_ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('TBJ_ANDROID_KEY_PASSWORD')
+            }
+        }
+    }
     buildTypes {
         release {
+            if (signingPath) signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

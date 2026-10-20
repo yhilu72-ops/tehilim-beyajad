@@ -3995,7 +3995,7 @@ section.screen.router-active{display:block!important}
 
 
 
-<section id="recordatorios" class="screen"><div class="top"><a class="circle" href="#lectura">‹</a><h2>Recordatorios</h2></div><div class="card"><label>Lectura de la mañana<input id="tbjReminderMorning" type="time" value="08:00"></label><label>Lectura de la noche<input id="tbjReminderEvening" type="time" value="22:30"></label><p class="muted">De domingo a jueves, en la hora local del teléfono. No se programan avisos los viernes ni los sábados. Puedes desactivarlos antes de Yom Tov. El sistema del teléfono puede retrasar los avisos.</p><div class="actions"><button id="tbjReminderSave" class="btn">Activar recordatorios</button><button id="tbjReminderOff" class="btn soft">Desactivar</button></div><p id="tbjReminderStatus" role="status" aria-live="polite"></p></div></section>
+<section id="recordatorios" class="screen"><div class="top"><a class="circle" href="#lectura">‹</a><h2>Recordatorios</h2></div><div class="card"><label>Lectura de la mañana<input id="tbjReminderMorning" type="time" value="08:00"></label><label>Lectura de la noche<input id="tbjReminderEvening" type="time" value="22:30"></label><label><input id="tbjReminderPending" type="checkbox"> Avisarme también de capítulos pendientes</label><p class="muted">Los avisos de capítulos se actualizan al abrir la app con conexión y al confirmar una lectura. No muestran nombres ni datos de las salas.</p><p class="muted">De domingo a jueves, en la hora local del teléfono. No se programan avisos los viernes ni los sábados. Puedes desactivarlos antes de Yom Tov. El sistema del teléfono puede retrasar los avisos.</p><div class="actions"><button id="tbjReminderSave" class="btn">Activar recordatorios</button><button id="tbjReminderOff" class="btn soft">Desactivar</button></div><p id="tbjReminderStatus" role="status" aria-live="polite"></p></div></section>
 
 
 <section id="buenos_deseos" class="screen">
@@ -5477,7 +5477,7 @@ async function publishWish(){
       room_id: selectedRealRoom.id,
       user_id: user.id,
       message: message,
-      display_name: isAnonymous ? null : (displayName || user.email),
+      display_name: isAnonymous ? null : (displayName || "Participante"),
       is_anonymous: isAnonymous
     });
 
@@ -5671,23 +5671,7 @@ function updateDonationPreviewReal(){
   const room=selectedRoomNameReal();
   box.innerHTML=`<b>${safeText(anon?"An\u{F3}nimo":donor)}</b> dedicar\u{E1} una <b>Aportaci\u{F3}n ${safeText(selectedDonationTierReal.name)}</b> de <b>$${selectedDonationTierReal.amount} MXN</b> en m\u{E9}rito de <b>${safeText(room)}</b>.`;
 }
-async function publishDonationReal(){
-  try{
-    if(!selectedRealRoom){ setBoxStatus("donationStatus","donationStatus","bad","Primero entra a una sala."); return; }
-    const donor=(document.getElementById("donorNameInput")?.value||"").trim();
-    const msg=(document.getElementById("donationMessageInput")?.value||"").trim();
-    const anon=!!document.getElementById("donationAnonymousInput")?.checked;
-    let user=null; try{ user=await getCurrentUserReal(); }catch(e){}
-    try{
-      const res=await sb.from("donations").insert({room_id:selectedRealRoom.id,user_id:user?user.id:null,tier:selectedDonationTierReal.name,amount_usd:selectedDonationTierReal.amount,display_name:anon?null:(donor||(user&&user.email)||"Participante"),is_anonymous:anon,message:msg});
-      if(res.error) throw res.error;
-    }catch(e){
-      const key=localKeyReal("donations"); const arr=loadLocalArray(key);
-      arr.unshift({tier:selectedDonationTierReal.name,amount_usd:selectedDonationTierReal.amount,display_name:anon?null:(donor||"Participante"),is_anonymous:anon,message:msg,created_at:new Date().toISOString()}); saveLocalArray(key,arr);
-    }
-    setBoxStatus("donationStatus","donationStatus","good","Aportaci\u{F3}n dedicada. En la siguiente versi\u{F3}n la conectamos con pago real si quieres.");
-  }catch(e){ setBoxStatus("donationStatus","donationStatus","bad","Error guardando aportaci\u{F3}n: "+(e.message||e)); }
-}
+// Payment initiation is implemented once in assets/release.js.
 
 // Mejora buenos deseos: actualizar t\u{ED}tulo y permitir descarga.
 const oldUpdateWishesRoomInfoV47 = typeof updateWishesRoomInfo === "function" ? updateWishesRoomInfo : null;
@@ -5872,29 +5856,7 @@ function renderDonationsV49(){
       safeText(item.name) + '</p><p>' + safeText(item.message || '') + '</p></div>';
   }).join("");
 }
-function saveDonationV49(){
-  if(!window.selectedRealRoom || !selectedRealRoom.id){
-    setDonationStatusV49("bad","Primero entra a una sala.");
-    return;
-  }
-  const nameEl = document.getElementById("donorNameV49");
-  const msgEl = document.getElementById("donationMessageV49");
-  const anonEl = document.getElementById("donationAnonymousV49");
-  const name = anonEl && anonEl.checked ? "Anonimo" : ((nameEl && nameEl.value.trim()) || "Participante");
-  const message = (msgEl && msgEl.value.trim()) || "";
-  const items = getDonationsV49();
-  items.unshift({
-    tier:selectedDonationTierV49.tier,
-    amount:selectedDonationTierV49.amount,
-    name:name,
-    message:message,
-    created_at:new Date().toISOString()
-  });
-  setDonationsV49(items);
-  if(msgEl) msgEl.value = "";
-  setDonationStatusV49("good","Dedicacion registrada visualmente en esta sala.");
-  renderDonationsV49();
-}
+// Legacy dedication buttons are routed to verified checkout by room-integrity.js.
 
 window.addEventListener("hashchange", function(){
   if(location.hash === "#compartir_sala") setTimeout(loadShareRoomV49,100);
@@ -7328,195 +7290,7 @@ window.addEventListener("load",function(){
 </script>
 
 
-<script>
-/* v64: kabalot unibles realmente guardadas y mejor dise\u{F1}o */
-(function(){
-  function roomV64(){
-    if(typeof roomV59==="function"){try{const r=roomV59(); if(r&&r.id)return r;}catch(e){}}
-    if(typeof getActiveRoomV54==="function"){try{const r=getActiveRoomV54(); if(r&&r.id)return r;}catch(e){}}
-    if(window.selectedRealRoom&&selectedRealRoom.id)return window.selectedRealRoom;
-    try{const raw=localStorage.getItem("activeRoomV54"); if(raw){const r=JSON.parse(raw); if(r&&r.id)return r;}}catch(e){}
-    return null;
-  }
-  function safeV64(x){
-    return (typeof safeText==="function")?safeText(x||""):(x||"").toString().replace(/[<>&]/g,function(c){return {"<":"&lt;",">":"&gt;","&":"&amp;"}[c];});
-  }
-  function statusV64(type,msg){
-    const el=document.getElementById("kabalaStatusV58");
-    if(el){el.className="v58Status "+(type||"");el.textContent=msg||"";}
-  }
-  function selectedTypeV64(){
-    const checked=document.querySelector('input[name="kabalaTypeV59"]:checked, input[name="kabalaTypeV64"]:checked');
-    return checked ? checked.value : "personal";
-  }
-  function selectedJoinableV64(){
-    return selectedTypeV64()==="joinable";
-  }
-  function ensureKabalaTypeDesignV64(){
-    const oldWrap=document.querySelector("#kabalot_v58 .v59JoinType");
-    if(oldWrap){
-      oldWrap.classList.add("v64KabalaTypeWrap");
-      Array.from(oldWrap.querySelectorAll("label")).forEach(function(lab){
-        lab.classList.add("v64KabalaChoice");
-      });
-    }
-    const titleCandidates=Array.from(document.querySelectorAll("#kabalot_v58 h3"));
-    titleCandidates.forEach(function(h){
-      if((h.textContent||"").toLowerCase().includes("kabalot publicadas")){
-        h.id="kabalotListTitleV64";
-      }
-    });
-  }
-
-  window.publishKabalaV58 = async function(){
-    const r=roomV64();
-    if(!r||!r.id){statusV64("bad","Primero entra a una sala.");return;}
-    const nameEl=document.getElementById("kabalaNameV58");
-    const textEl=document.getElementById("kabalaTextV58");
-    const anonEl=document.getElementById("kabalaAnonV58");
-    const name=(nameEl&&nameEl.value||"").trim();
-    const body=(textEl&&textEl.value||"").trim();
-    const anon=!!(anonEl&&anonEl.checked);
-    const joinable=selectedJoinableV64();
-
-    if(!body){statusV64("bad","Escribe una kabal\u{E1}.");return;}
-    statusV64("info","Publicando kabal\u{E1}...");
-
-    let userId=null;
-    try{
-      if(window.sb){
-        const u=await sb.auth.getUser();
-        userId=u&&u.data&&u.data.user?u.data.user.id:null;
-      }
-    }catch(e){}
-
-    const item={
-      room_id:r.id,
-      user_id:userId,
-      display_name:anon?"Anonimo":(name||"Anonimo"),
-      is_anonymous:anon,
-      text:body,
-      message:body,
-      joinable:joinable,
-      created_at:new Date().toISOString(),
-      local_id:"k_"+Date.now()
-    };
-
-    let saved=false;
-    try{
-      if(window.sb){
-        const res=await sb.from("kabalot").insert(item).select("*").maybeSingle();
-        if(res.error)throw res.error;
-        saved=true;
-        item.id=res.data&&res.data.id||item.local_id;
-      }
-    }catch(err){
-      try{
-        const key="kabalot_"+r.id;
-        const arr=JSON.parse(localStorage.getItem(key)||"[]");
-        arr.unshift(item);
-        localStorage.setItem(key,JSON.stringify(arr));
-        saved=true;
-      }catch(e){}
-    }
-
-    if(textEl)textEl.value="";
-    statusV64(saved?"good":"bad", saved ? "Kabal\u{E1} publicada." : "No se pudo publicar la kabal\u{E1}.");
-    setTimeout(function(){ if(typeof loadKabalotV58==="function")loadKabalotV58(); },250);
-  };
-
-  window.loadKabalotV58 = async function(){
-    ensureKabalaTypeDesignV64();
-    const r=roomV64();
-    const info=document.getElementById("kabalotRoomInfoV58");
-    const list=document.getElementById("kabalotListV58");
-    if(info){
-      const title=r?(r.title||r.person_name||"Sala"):"Sala";
-      info.innerHTML="<b>"+safeV64(title)+"</b>";
-    }
-    if(!list)return;
-    if(!r||!r.id){list.innerHTML='<div class="v58Status bad" style="display:block">Primero entra a una sala.</div>';return;}
-    list.innerHTML='<div class="v58Status info" style="display:block">Cargando kabalot...</div>';
-
-    let items=[];
-    try{
-      if(window.sb){
-        const res=await sb.from("kabalot").select("*").eq("room_id",r.id).order("created_at",{ascending:false}).limit(100);
-        if(!res.error&&res.data)items=res.data||[];
-      }
-    }catch(e){}
-    try{
-      const local=JSON.parse(localStorage.getItem("kabalot_"+r.id)||"[]");
-      items=local.concat(items);
-    }catch(e){}
-
-    if(!items.length){
-      list.innerHTML='<div class="v58Panel"><p style="text-align:center">No hay kabalot publicadas todav\u{ED}a.</p></div>';
-      return;
-    }
-
-    /* contador de uniones */
-    if(window.sb){
-      for(const it of items){
-        if(it.joinable&&it.id){
-          try{
-            const cnt=await sb.from("kabala_joins").select("id",{count:"exact",head:true}).eq("kabala_id",it.id);
-            it.join_count=cnt.count||0;
-          }catch(e){}
-        }
-      }
-    }
-
-    window.kabalotItemsV58=items;
-    list.innerHTML=items.map(function(it,i){
-      const name=it.is_anonymous?"Anonimo":(it.display_name||it.name||"Anonimo");
-      const body=it.text||it.message||it.kabala||"";
-      const joinable=it.joinable===true || it.joinable==="true" || it.type==="joinable";
-      const count=Number(it.join_count||it.joins_count||0);
-      return '<div class="v58ListItem">'+
-        (joinable?'<span class="v64JoinBadge">\u{1F91D} '+safeV64(count)+' unidos</span>':'<span class="v64PersonalBadge">Personal</span>')+
-        '<br><b>'+safeV64(name)+'</b>'+
-        '<p>'+safeV64(body)+'</p>'+
-        '<div class="muted">'+new Date(it.created_at||Date.now()).toLocaleDateString()+'</div>'+
-        '<div class="v58Actions">'+
-          (joinable?'<button class="v64JoinBtn" onclick="joinKabalaV64('+i+')">Me uno</button>':'')+
-          '<button class="v58MiniDanger" onclick="deleteKabalaV58('+i+')">Eliminar</button>'+
-        '</div>'+
-      '</div>';
-    }).join("");
-  };
-
-  window.joinKabalaV64 = async function(i){
-    const it=window.kabalotItemsV58&&window.kabalotItemsV58[i];
-    if(!it)return;
-    try{
-      if(window.sb&&it.id){
-        const u=await sb.auth.getUser();
-        const user=u&&u.data&&u.data.user;
-        if(!user){alert("Primero inicia sesi\u{F3}n.");return;}
-        const res=await sb.from("kabala_joins").upsert({kabala_id:it.id,user_id:user.id},{onConflict:"kabala_id,user_id"});
-        if(res.error)throw res.error;
-      }else{
-        it.join_count=Number(it.join_count||0)+1;
-      }
-      await window.loadKabalotV58();
-    }catch(err){
-      alert("No se pudo unir: "+(err.message||err));
-    }
-  };
-
-  /* compatibilidad con bot\u{F3}n viejo */
-  window.joinKabalaV59=window.joinKabalaV64;
-
-  window.addEventListener("load",function(){setTimeout(ensureKabalaTypeDesignV64,120);setTimeout(ensureKabalaTypeDesignV64,700);});
-  window.addEventListener("hashchange",function(){
-    if(location.hash==="#kabalot_v58"){
-      setTimeout(ensureKabalaTypeDesignV64,120);
-      setTimeout(function(){ if(typeof loadKabalotV58==="function")loadKabalotV58(); },180);
-    }
-  });
-})();
-</script>
+<script src="assets/kabalot.js"></script>
 
 
 <section id="ayuda_v65" class="screen">
@@ -10841,13 +10615,13 @@ let shabbatBusy=false;
 window.claimShabbatChaptersV123=async function(){
  const st=$("#shabbatStatusV123");if(shabbatBusy)return;if(!selectedShabbat.size){if(st)st.textContent="Selecciona capítulos para Shabbat.";return;}
  shabbatBusy=true;try{const failed=[];for(const ch of selectedShabbat){const r=await shabbatRpc("tbj_seat_reserve",{p_chapter_number:ch});if(!r.ok)failed.push(ch);}
- const r=await shabbatRpc("tbj_seat_confirm");if(!r.ok)throw Error("No se pudo confirmar la reserva.");selectedShabbat.clear();await loadShabbat();
+ const r=await shabbatRpc("tbj_seat_confirm");if(!r.ok)throw Error("No se pudo confirmar la reserva.");selectedShabbat.clear();window.dispatchEvent(new Event("tbj:chapters-changed"));await loadShabbat();
  if(st)st.textContent=(r.chapters.length?"Apartados para Shabbat: "+r.chapters.join(", ")+".":"No se apartaron capítulos nuevos.")+(failed.length?" Ya ocupados: "+failed.join(", ")+".":"");
  }catch(e){if(st)st.textContent=e.message;}finally{shabbatBusy=false;}
 };
 window.completeShabbatChaptersV123=async function(){
  const st=$("#shabbatStatusV123");if(shabbatBusy)return;shabbatBusy=true;
- try{const r=await shabbatRpc("tbj_seat_complete");if(!r.ok)throw Error("No se pudo confirmar la lectura.");await loadShabbat();if(st)st.textContent=r.chapters.length?"Confirmados: "+r.chapters.join(", ")+".":"No tienes capítulos pendientes para Shabbat.";}catch(e){if(st)st.textContent=e.message;}finally{shabbatBusy=false;}
+ try{const r=await shabbatRpc("tbj_seat_complete");if(!r.ok)throw Error("No se pudo confirmar la lectura.");window.dispatchEvent(new Event("tbj:chapters-changed"));await loadShabbat();if(st)st.textContent=r.chapters.length?"Confirmados: "+r.chapters.join(", ")+".":"No tienes capítulos pendientes para Shabbat.";}catch(e){if(st)st.textContent=e.message;}finally{shabbatBusy=false;}
 };
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#shabbatChapterGridV123 [data-shabbat-ch]"); if(!b||b.disabled)return; e.preventDefault();e.stopImmediatePropagation(); const ch=Number(b.getAttribute("data-shabbat-ch")); selectedShabbat.has(ch)?selectedShabbat.delete(ch):selectedShabbat.add(ch); loadShabbat(); return false},true)
 async function isOwner(){const room=getRoom(), u=await user(); if(!room||!u)return false; await round(room); const owner=activeRoom&&(activeRoom.created_by||activeRoom.user_id||activeRoom.owner_id); return !!(owner&&owner===u.id)}
@@ -11180,6 +10954,7 @@ async function rpc(name,args){
     }
     throw new Error(message);
   }
+  if(["tbj_seat_confirm","tbj_seat_complete"].includes(name))window.dispatchEvent(new Event("tbj:chapters-changed"));
   return normalizeJson(result.data);
 }
 
@@ -11572,6 +11347,9 @@ setTimeout(()=>{if(location.hash==="#seleccionar")start();},700);
 
 <script src="assets/capacitor-core.js"></script>
 <script src="assets/local-notifications.js"></script>
+<script src="assets/app-plugin.js"></script>
+<script src="assets/share-plugin.js"></script>
+<script src="assets/native.js"></script>
 <script src="assets/reminders.js"></script>
 <script src="assets/release.js"></script>
 <script src="assets/room-integrity.js"></script>
