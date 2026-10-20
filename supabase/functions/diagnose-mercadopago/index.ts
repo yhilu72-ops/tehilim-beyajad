@@ -14,6 +14,7 @@ const DEFAULT_PREFERENCE_ID =
   "3546561536-30ab58a0-77b8-46e8-97af-28665a08d31f";
 
 type RequestBody = {
+  mode?: unknown;
   externalReference?: unknown;
   preferenceId?: unknown;
 };
@@ -136,6 +137,7 @@ function redactSensitive(
       "card_token",
       "card",
       "email",
+      "payer_email",
       "identification",
       "phone",
       "address",
@@ -323,11 +325,21 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  // Diagnostics query privileged payment records and must never accept a public
-  // anon JWT or an ordinary signed-in user. Keep the gateway JWT check too.
-  const expectedAdmin = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  const supplied = (req.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "");
-  if (!expectedAdmin || supplied !== expectedAdmin) {
+  // Authenticate before reading provider credentials or payment records.
+  // Modern Supabase secret keys are not JWTs: authorize them here on `apikey`.
+  // Legacy service-role Bearer tokens remain supported; public/user keys do not.
+  const legacyAdmin = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  let secretKeys: string[] = [];
+  try {
+    const configured = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") || "{}");
+    if (configured && typeof configured === "object" && !Array.isArray(configured))
+      secretKeys = Object.values(configured).filter((key): key is string => typeof key === "string" && key.length > 0);
+  } catch { /* Missing/malformed keys must not grant access. */ }
+  const supplied = (req.headers.get("Authorization") || "").match(/^Bearer\s+(\S+)$/i)?.[1] || "";
+  const suppliedApiKey = req.headers.get("apikey") || "";
+  const authorized = (!!legacyAdmin && supplied === legacyAdmin) ||
+    (!!suppliedApiKey && secretKeys.some(key => suppliedApiKey === key));
+  if (!authorized) {
     return jsonResponse({ error: "Acceso administrativo requerido" }, 403);
   }
 
@@ -358,6 +370,32 @@ Deno.serve(async (req: Request) => {
       body = await req.json();
     } catch {
       body = {};
+    }
+
+    // Configuration checks are read-only and do not query payment records.
+    // Never return secret values or a complete Mercado Pago account profile.
+    if (body.mode === "configuration") {
+      const environment = Deno.env.get("MERCADO_PAGO_ENVIRONMENT") === "production" ? "production" : "sandbox";
+      const expectedCollector = environment === "production"
+        ? Deno.env.get("MERCADO_PAGO_COLLECTOR_ID")
+        : (Deno.env.get("MERCADO_PAGO_TEST_COLLECTOR_ID") || "3546561536");
+      const identities = await identityChecks(accessToken);
+      const owner = identities.tokenOwner;
+      const verified = owner.verified;
+      const collectorMatches = verified && String(owner.id) === expectedCollector;
+      const mexicanAccount = verified && owner.siteId === "MLM";
+      const accountMatchesEnvironment = verified && (environment === "sandbox" ? owner.testUser === true : owner.testUser === false);
+      const webhookSecretConfigured = !!Deno.env.get("MERCADO_PAGO_WEBHOOK_SECRET");
+      return jsonResponse({
+        diagnosticVersion: "1.2", mode: "configuration", checkedAt: new Date().toISOString(),
+        configuration: { environment, expectedCollector: expectedCollector || null,
+          explicitTestCollector: !!Deno.env.get("MERCADO_PAGO_TEST_COLLECTOR_ID"),
+          accessTokenConfigured: true, webhookSecretConfigured },
+        checks: { tokenVerified: verified, collectorMatches, mexicanAccount, accountMatchesEnvironment },
+        readyForCheckoutTest: verified && collectorMatches && mexicanAccount && accountMatchesEnvironment && webhookSecretConfigured,
+        identityChecks: identities,
+        limitation: "Configuration checks do not prove an approved payment, an authentic webhook or production readiness.",
+      });
     }
 
     const externalReference =
@@ -727,7 +765,7 @@ Deno.serve(async (req: Request) => {
     }
 
     return jsonResponse({
-      diagnosticVersion: "1.1",
+      diagnosticVersion: "1.2",
       identityChecks: await identityChecks(accessToken),
       checkedAt: new Date().toISOString(),
 

@@ -1,5 +1,40 @@
 # Mercado Pago — estado comprobado y activación pendiente
 
+## Diagnóstico confirmado el 20/10/2026 a las 19:25 UTC
+
+Se ejecutó `diagnose-mercadopago` v9 desde el panel autenticado de Supabase, con `{"mode":"configuration"}`. Respuesta real HTTP 200. La comprobación solo hizo consultas de lectura al proveedor; no creó preferencias ni cargos y no consultó registros de pagos.
+
+| Comprobación real | Resultado |
+|---|---|
+| Entorno configurado | `sandbox` |
+| Vendedor de pruebas esperado | `3546561536` (valor histórico; no hay variable explícita) |
+| Titular de la credencial guardada | `3544258173`, cuenta mexicana `MLM`, activa y sin etiqueta de prueba |
+| Credencial aceptada por Mercado Pago | Sí: `/users/me` devolvió HTTP 200 |
+| Coincide el vendedor con el esperado | No |
+| Coincide el tipo de cuenta con el entorno | No |
+| Secreto de webhook almacenado | Sí; su correspondencia con la aplicación aún no está probada |
+| Listo para iniciar checkout de prueba | No |
+
+La causa comprobada del bloqueo actual es la mezcla de una credencial de cuenta real con una integración que exige el vendedor sandbox. No se arregla cambiando el ID esperado al titular real ni quitando esa validación. La aplicación `Tehilim BeYajad` con ID `9001196078600708` respondió HTTP 200, pero el proveedor no devolvió su propietario: esa consulta no acredita propiedad ni habilitación para producción.
+
+Evidencia: [respuesta sin secretos](evidence/mp-configuration-20261020.json) y [captura del panel](evidence/mp-configuration-20261020.jpg). El encabezado administrativo fue retirado antes de capturar la pantalla.
+
+### Correcciones guardadas y desplegadas
+
+- Corregido un error del diagnóstico: la expresión regular anterior no retiraba un prefijo `Bearer ` normal y rechazaba una credencial administrativa válida.
+- Añadido soporte para las claves secretas administrativas actuales de Supabase mediante `apikey`, conservando el soporte para el JWT administrativo anterior. Las claves públicas y las sesiones ordinarias no autorizan este diagnóstico.
+- Añadido modo de configuración que muestra únicamente identidad resumida y comprobaciones; nunca devuelve claves, contraseñas, correo ni domicilio del titular.
+- Añadido `supabase/config.toml` para conservar la configuración real de las cinco funciones. La autorización sigue dentro de cada función; el webhook exige su firma HMAC. No se desactivó esa validación.
+- Versión desplegada del diagnóstico: **v9 ACTIVE**, SHA-256 del paquete `c3cf3059302affbf6c2287905ec3f1c0474be041ab80059d08d25836f8acdcec`.
+
+Validación: **67/67 pruebas automáticas pasan**, incluidas siete del diagnóstico. Además, pruebas HTTPS contra el despliegue rechazaron solicitudes sin credencial y con Bearer inválido (403), y la pasarela rechazó una clave pública inválida (401). La ejecución administrativa real devolvió 200. Esto verifica el diagnóstico y las protecciones probadas; no equivale a completar Checkout Pro.
+
+No se cambiaron secretos, no se activó producción, no se modificaron pagos históricos y no se hicieron cargos. Las funciones de preferencia y webhook permanecen en v13. En la sesión disponible, Mercado Pago sigue mostrando un error de acceso; no hay una conexión OAuth de Mercado Pago disponible. El servicio oficial MCP ofrece `get_credentials` con OAuth, pero el Access Token existente no sustituye esa autorización. No se crearon cuentas adicionales ni otra aplicación.
+
+Referencias técnicas: [claves actuales de Supabase](https://supabase.com/docs/guides/getting-started/migrating-to-new-api-keys), [configuración de funciones](https://supabase.com/docs/guides/functions/function-configuration), [herramientas oficiales de Mercado Pago MCP](https://www.mercadopago.com.mx/developers/es/docs/mcp-server/tools).
+
+## Prueba de creación de preferencia anterior al diagnóstico
+
 Comprobación del 20/10/2026, con cuenta desechable de la aplicación, mediante HTTPS contra la función desplegada. Respuesta real HTTP 409:
 
 ```json

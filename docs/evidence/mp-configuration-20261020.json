@@ -1,0 +1,41 @@
+{
+  "source": "Supabase dashboard: Test diagnose-mercadopago; actual HTTP 200 response",
+  "checkedAt": "2026-10-20T19:25:20.311Z",
+  "diagnosticVersion": "1.2",
+  "deployedFunctionVersion": 9,
+  "mode": "configuration",
+  "configuration": {
+    "environment": "sandbox",
+    "expectedCollector": "3546561536",
+    "explicitTestCollector": false,
+    "accessTokenConfigured": true,
+    "webhookSecretConfigured": true
+  },
+  "checks": {
+    "tokenVerified": true,
+    "collectorMatches": false,
+    "mexicanAccount": true,
+    "accountMatchesEnvironment": false
+  },
+  "readyForCheckoutTest": false,
+  "tokenOwner": {
+    "httpStatus": 200,
+    "verified": true,
+    "id": 3544258173,
+    "siteId": "MLM",
+    "userType": "normal",
+    "testUser": false,
+    "siteStatus": "active",
+    "buyAllowed": true,
+    "sellAllowed": true,
+    "emailIsTest": false
+  },
+  "declaredApplication": {
+    "httpStatus": 200,
+    "verified": true,
+    "id": 9001196078600708,
+    "name": "Tehilim BeYajad",
+    "ownerId": null
+  },
+  "limitation": "Sanitized excerpt of the observed response. Configuration checks do not prove an approved payment, an authentic webhook, ownership of the application, or production readiness."
+}

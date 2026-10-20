@@ -1,0 +1,21 @@
+# Match the deployed functions: each handler verifies its own authentication.
+# Never remove the handler guards when gateway JWT verification is disabled.
+
+# User JWTs are checked against Supabase Auth; room membership is checked too.
+[functions.create-mercadopago-preference]
+verify_jwt = false
+
+# Mercado Pago sends an HMAC signature, not a Supabase JWT.
+[functions.mercadopago-webhook]
+verify_jwt = false
+
+# Modern administrative secret API keys are not JWTs; checked by the handler.
+[functions.diagnose-mercadopago]
+verify_jwt = false
+
+# These handlers authenticate the user and restrict operations to that user.
+[functions.payment-status]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = false
