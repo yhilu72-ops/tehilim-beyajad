@@ -219,7 +219,7 @@ Deno.serve(async (req: Request) => {
     const owner = await ownerResponse.json();
     const isTest = Array.isArray(owner.tags) && owner.tags.includes("test_user");
     if(String(owner.id)!==expectedCollector || owner.site_id!=="MLM" || (environment==="sandbox" ? !isTest : isTest)) {
-      return jsonResponse({error:"La cuenta de Mercado Pago no coincide con el entorno configurado."},409);
+      return jsonResponse({error:"La cuenta de Mercado Pago no coincide con el entorno configurado.",code:"SELLER_CONFIGURATION_MISMATCH",checks:{environment,collectorMatches:String(owner.id)===expectedCollector,mexicanAccount:owner.site_id==="MLM",testAccount:isTest}},409);
     }
 
     const contributionId =
@@ -313,7 +313,9 @@ Deno.serve(async (req: Request) => {
       },
 
       auto_return: "approved",
-      payer: {email:user.email},
+      // A real app email is not a Mercado Pago test-buyer identity. Let the
+      // hosted test checkout use the separately authenticated test buyer.
+      ...(environment === "production" ? { payer: { email: user.email } } : {}),
 
       notification_url:
         notificationUrl,
