@@ -1,5 +1,6 @@
 # Tehilim BeYajad — preparación de publicación
 
+**Continuación nativa actual:** [NATIVE-VERIFICATION-20261020.md](NATIVE-VERIFICATION-20261020.md). Este archivo conserva los resultados de su etapa.
 **Estado actualizado:** consultar [PUBLISHED-20261020.md](PUBLISHED-20261020.md). La URL de recuperación se corrigió, la PR se fusionó y la web nueva se publicó. El resto de este archivo conserva el historial de preparación.
 
 Fecha de trabajo: 20 de octubre de 2026. Base recuperada: a5ee9bfb0b0ca338a43fea6a818b9a7cd356ffde.

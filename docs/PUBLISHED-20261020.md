@@ -1,5 +1,6 @@
 # Publicación y verificación — 20 octubre 2026
 
+**Continuación nativa actual:** [NATIVE-VERIFICATION-20261020.md](NATIVE-VERIFICATION-20261020.md). Este archivo conserva los resultados de su etapa.
 Este informe actualiza los bloqueos de URL y frontend descritos en los informes anteriores. No declara la app terminada para tiendas.
 
 ## Recuperación de contraseña

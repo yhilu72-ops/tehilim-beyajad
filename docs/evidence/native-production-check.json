@@ -1,0 +1,56 @@
+[
+  {
+    "file": "index.html",
+    "http": 200,
+    "same": true,
+    "sha256": "bf16c0ab9d92ee498e2420fa78b27829c966cb3b70e745afb7d814e82540bed6"
+  },
+  {
+    "file": "assets/kabalot.js",
+    "http": 200,
+    "same": true,
+    "sha256": "5e5f38b0ab37e89104961702477d55b22cb0284135d5d4676d55de8141a1a9ad"
+  },
+  {
+    "file": "assets/reminders.js",
+    "http": 200,
+    "same": true,
+    "sha256": "f46e4a7c2f41dcc4816d90528f685b38e2b8631aeb360b25370f9fcdbef1d3e3"
+  },
+  {
+    "file": "assets/native.js",
+    "http": 200,
+    "same": true,
+    "sha256": "d653c1f91519244c60eccc58390de9e7070e010d37d4bda292855c3a9d57843d"
+  },
+  {
+    "file": "assets/release.js",
+    "http": 200,
+    "same": true,
+    "sha256": "38406139bd25c3a0d2ebbfe6fe673b9f9630841dc6df954427de3364bf5c03d6"
+  },
+  {
+    "file": "sw.js",
+    "http": 200,
+    "same": true,
+    "sha256": "5f73f183de143244a3d76579dccabd23f2d00843e4d9eba364786873cddd0178"
+  },
+  {
+    "file": "privacy.html",
+    "http": 200,
+    "same": true,
+    "sha256": "baac8af44f80c64c0c3da00ddea4bc81bc737120a5badfba68fc693c691f6b33"
+  },
+  {
+    "file": "terms.html",
+    "http": 200,
+    "same": true,
+    "sha256": "358a96169f93c03a39cea7dce7cd649f4cc091d078a3a919aeb7f51853326c0a"
+  },
+  {
+    "file": "delete-account.html",
+    "http": 200,
+    "same": true,
+    "sha256": "19b58e9b95f43ce06459fd95f3dbab5944ba838b7c947f0c8f0b1bfef6c5a388"
+  }
+]

@@ -1,5 +1,6 @@
 # Verificación de continuación — 20 octubre 2026
 
+**Continuación nativa actual:** [NATIVE-VERIFICATION-20261020.md](NATIVE-VERIFICATION-20261020.md). Este archivo conserva los resultados de su etapa.
 Se recuperó la rama `release/mobile-readiness-20261020`, PR #1, desde `56eeba15add025388ad9093a333ba244b47a1032`. Main seguía en `a5ee9bfb0b0ca338a43fea6a818b9a7cd356ffde`. No se reconstruyó la aplicación ni se cambió su diseño.
 
 ## Cambios nuevos aplicados

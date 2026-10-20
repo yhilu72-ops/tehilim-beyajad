@@ -23,6 +23,8 @@ Funciones actuales: `create-mercadopago-preference` v13, `mercadopago-webhook` v
 
 La credencial almacenada corresponde a una cuenta mexicana que no se identifica como usuario de prueba y cuyo vendedor no coincide con el esperado. La página de desarrolladores de Mercado Pago muestra un error de acceso en la sesión disponible; no se ha obtenido acceso al panel del titular. No se han cambiado credenciales ni activado producción.
 
+La documentación vigente de Checkout Pro mediante Preferences indica que el vendedor de prueba se crea con la aplicación y que su Access Token también puede comenzar por `APP_USR`; el prefijo por sí solo no identifica producción. Se comprueba identidad y etiqueta del vendedor, no únicamente el nombre de la clave.
+
 Se necesita acceso legítimo al panel del titular para obtener las credenciales de la aplicación y del vendedor de pruebas correctos, y usar un comprador de pruebas distinto. El titular debe completar personalmente cualquier verificación de identidad o acceso que Mercado Pago solicite. No enviar claves ni contraseñas por chat.
 
 Variables del servidor que deben quedar coherentes, sin revelar sus valores:
