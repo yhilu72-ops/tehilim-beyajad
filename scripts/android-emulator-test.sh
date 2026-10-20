@@ -2,8 +2,12 @@
 set -euo pipefail
 : "${ANDROID_HOME:?Android SDK required}"
 export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+export ANDROID_USER_HOME="${RUNNER_TEMP:-/tmp}/tehilim-android"
+export ANDROID_AVD_HOME="$ANDROID_USER_HOME/avd"
+mkdir -p "$ANDROID_AVD_HOME"
 sdkmanager 'platform-tools' 'emulator' 'system-images;android-35;google_apis;x86_64' >/dev/null
-printf 'no\n' | avdmanager create avd --name tehilim-ci --package 'system-images;android-35;google_apis;x86_64' --device pixel_6 --force >/dev/null
+printf 'no\n' | avdmanager create avd --name tehilim-ci --package 'system-images;android-35;google_apis;x86_64' --device pixel_6 --path "$ANDROID_AVD_HOME/tehilim-ci.avd" --force
+test -f "$ANDROID_AVD_HOME/tehilim-ci.ini"
 if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
 "$ANDROID_HOME/emulator/emulator" -avd tehilim-ci -no-window -noaudio -no-snapshot -no-boot-anim -gpu swiftshader_indirect > /tmp/tehilim-emulator.log 2>&1 &
 trap 'result=$?; if [ $result -ne 0 ]; then cat /tmp/tehilim-emulator.log; fi; adb emu kill >/dev/null 2>&1 || true' EXIT

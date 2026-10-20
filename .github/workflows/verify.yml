@@ -60,9 +60,11 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci --ignore-scripts && npm run mobile:sync
+      - run: bash scripts/ios-simulator-smoke.sh --prepare
+        timeout-minutes: 3
       - run: xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/ios CODE_SIGNING_ALLOWED=NO build
       - run: bash scripts/ios-simulator-smoke.sh build/ios/Build/Products/Debug-iphonesimulator/App.app
-        timeout-minutes: 6
+        timeout-minutes: 12
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: ios-simulator-build

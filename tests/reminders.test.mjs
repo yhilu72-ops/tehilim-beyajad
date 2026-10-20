@@ -9,3 +9,13 @@ test('Pending chapters get only two one-shot reminders without private room data
 test('Completing all chapters cancels pending reminders without touching daily reading',async()=>{let cancelled,scheduled=false;const plugin={checkPermissions:async()=>({display:'granted'}),cancel:async x=>cancelled=x.notifications,schedule:async()=>scheduled=true};await api.syncPending(plugin,['08:00','22:30'],0);assert.deepEqual(Array.from(cancelled,x=>x.id),[73120,73121]);assert.equal(scheduled,false);});
 test('Lost notification permission clears pending reminders without prompting',async()=>{let ids;await api.syncPending({checkPermissions:async()=>({display:'denied'}),cancel:async x=>ids=x.notifications},['08:00','22:30'],3);assert.equal(ids.length,2);});
 test('Partial OS scheduling failure rolls back the incomplete schedule',async()=>{let calls=0;await assert.rejects(api.enable({checkPermissions:async()=>({display:'granted'}),cancel:async()=>calls++,schedule:async()=>{},getPending:async()=>({notifications:[{id:73100}]})},['08:00','22:30']));assert.equal(calls,2);});
+test('Failed schedule replacement cannot leave old pending-chapter alerts enabled',async()=>{
+ const elements=new Map(),scheduled=new Map();let listener;
+ const node=id=>{if(!elements.has(id))elements.set(id,{id,value:'08:00',checked:true,disabled:false,textContent:'',events:{},addEventListener(name,fn){this.events[name]=fn;}});return elements.get(id);};
+ const plugin={checkPermissions:async()=>({display:'granted'}),cancel:async({notifications})=>{for(const n of notifications)scheduled.delete(n.id);},schedule:async({notifications})=>{for(const n of notifications)scheduled.set(n.id,n);},getPending:async()=>({notifications:[...scheduled.values()]}),addListener:()=>{}};
+ const context={document:{getElementById:node},Capacitor:{isNativePlatform:()=>true},capacitorLocalNotifications:{LocalNotifications:plugin},localStorage:{getItem:()=>JSON.stringify({enabled:true,pending:true,morning:'08:00',evening:'22:30'}),setItem:()=>{}},location:{hash:''},addEventListener:()=>{},setTimeout,Date,sb:{auth:{getUser:async()=>({data:{user:{id:'self'}}}),onAuthStateChange:fn=>listener=fn},from:()=>({select(){return this;},eq(){return this;},then(resolve){return Promise.resolve({count:2,error:null}).then(resolve);}})}};
+ context.window=context;vm.runInNewContext(await readFile('assets/reminders.js','utf8'),context);
+ await new Promise(resolve=>setTimeout(resolve,10));assert.equal(scheduled.has(73120),true);
+ plugin.schedule=async({notifications})=>{scheduled.set(notifications[0].id,notifications[0]);throw Error('OS scheduling failure');};
+ await node('tbjReminderSave').events.click();assert.equal(scheduled.size,0);assert.match(node('tbjReminderStatus').textContent,/OS scheduling failure/);
+});
