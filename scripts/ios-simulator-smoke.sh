@@ -15,6 +15,11 @@ printf 'Installing bundled app\n'
 xcrun simctl install "$device_id" "$app_path"
 printf 'Launching com.tehilimbeyajad.app\n'
 xcrun simctl launch "$device_id" com.tehilimbeyajad.app
-sleep 5
-xcrun simctl io "$device_id" screenshot artifacts/ios-simulator-start.png
-# This verifies process startup only, not signed-device or UI acceptance.
+swiftc scripts/verify-ios-screen.swift -o /tmp/tbj-verify-ios-screen
+for attempt in $(seq 1 30); do
+  xcrun simctl io "$device_id" screenshot artifacts/ios-simulator-start.png
+  if /tmp/tbj-verify-ios-screen artifacts/ios-simulator-start.png; then exit 0; fi
+  sleep 3
+done
+printf 'The iPhone app did not render its sign-in screen within the allowed time.\n' >&2
+exit 1
