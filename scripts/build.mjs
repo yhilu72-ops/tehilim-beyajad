@@ -1,0 +1,15 @@
+import {cp,mkdir,readFile,writeFile,rm,readdir} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+await rm('dist',{recursive:true,force:true});await mkdir('dist',{recursive:true});
+for(const name of ['index.html','manifest.json','tehilim.json','tikun_klali.json','shir_hashirim.json','perek_shira.json','kolel-logo.jpg','carta-kolel-firmada.jpg','assets','texts','privacy.html','terms.html','delete-account.html','licenses.html'])await cp(name,`dist/${name}`,{recursive:true});
+await cp('node_modules/@supabase/supabase-js/dist/umd/supabase.js','dist/assets/supabase.js');
+await cp('node_modules/@capacitor/core/dist/capacitor.js','dist/assets/capacitor-core.js');
+await cp('node_modules/@capacitor/local-notifications/dist/plugin.js','dist/assets/local-notifications.js');
+const paths=[];async function walk(dir){for(const item of await readdir(dir,{withFileTypes:true})){const p=`${dir}/${item.name}`;if(item.isDirectory())await walk(p);else paths.push(p.replace('dist/','./'));}}await walk('dist');
+const version=createHash('sha256');for(const p of paths)version.update(await readFile(p.replace('./','dist/')));
+const cache='tbj-'+version.digest('hex').slice(0,12);
+await writeFile('dist/sw.js',`const CACHE=${JSON.stringify(cache)}, ASSETS=${JSON.stringify(paths)};
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('tbj-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(e.request.method!=='GET'||u.origin!==self.location.origin)return;const path='./'+u.pathname.replace(/^\\//,'');if(!ASSETS.includes(path)&&u.pathname!=='/')return;e.respondWith(caches.open(CACHE).then(async c=>{const key=u.pathname==='/'?'./index.html':path;return await c.match(key)||fetch(e.request)}));});`);
+console.log(`Built ${paths.length} offline assets (${cache})`);
