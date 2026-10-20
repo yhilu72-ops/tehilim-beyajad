@@ -6,6 +6,7 @@ xcrun simctl boot "$device_id" || true
 xcrun simctl bootstatus "$device_id" -b
 xcrun simctl install "$device_id" "$app_path"
 xcrun simctl launch "$device_id" com.tehilimbeyajad.app
+sleep 5
 mkdir -p artifacts
 xcrun simctl io "$device_id" screenshot artifacts/ios-simulator-start.png
 # Launch verifies process startup only; this is not a signed device or UI acceptance test.

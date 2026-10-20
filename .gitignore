@@ -13,3 +13,11 @@ android/app/src/main/assets/public/
 *.keystore
 *.jks
 .DS_Store
+
+artifacts/
+build/
+*.p12
+*.p8
+*.mobileprovision
+*.xcarchive/
+*.ipa

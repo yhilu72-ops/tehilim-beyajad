@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
+: "${ANDROID_HOME:?Android SDK required}"
+export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
 sdkmanager 'platform-tools' 'emulator' 'system-images;android-35;google_apis;x86_64' >/dev/null
 printf 'no\n' | avdmanager create avd --name tehilim-ci --package 'system-images;android-35;google_apis;x86_64' --device pixel_6 --force >/dev/null
 if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
