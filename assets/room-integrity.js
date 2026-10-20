@@ -44,7 +44,7 @@ function clearAccountRoom(){
   ++generation;
   window.selectedRealRoom=null;
   window.searchRoomResultV50=null;
-  try{for(const key of Object.keys(localStorage))if(/^(activeRoom|donations_|tehilim_donations_)/.test(key))localStorage.removeItem(key);}catch{}
+  try{for(const key of Object.keys(localStorage))if(/^(activeRoom|donations_|tehilim_donations_|tbj_reza_|tbj_prayer_requests_)/.test(key))localStorage.removeItem(key);}catch{}
   message('Inicia sesión para ver las aportaciones de la sala.');
 }
 let account;

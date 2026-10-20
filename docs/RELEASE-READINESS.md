@@ -70,3 +70,7 @@ No se encontró una conexión disponible a Mercado Pago, App Store Connect ni Go
 - Se agregaron seis pruebas de regresión; las 13 pruebas locales pasan, junto con validación de textos y sincronización nativa.
 - Ficha española y notas de revisión preparadas en `store/`; no enviadas a Apple ni Google.
 - GitHub informó `Vercel: success` para el commit 6ea94f0. Esto confirma una compilación/vista previa automática, no el despliegue de la rama principal ni una revisión visual.
+
+## Verificación posterior de los ocho pendientes
+
+Ver `docs/TASKS-20261020.md`: privacidad de peticiones desplegada, Shabbat probado con dos identidades, plugin de recordatorios incorporado, correo/cambio de contraseña comprobados, retorno erróneo de Auth identificado y eliminación de cuenta corregida y probada. Las pruebas locales ahora suman 22.

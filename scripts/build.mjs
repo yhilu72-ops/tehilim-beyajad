@@ -3,6 +3,8 @@ import {createHash} from 'node:crypto';
 await rm('dist',{recursive:true,force:true});await mkdir('dist',{recursive:true});
 for(const name of ['index.html','manifest.json','tehilim.json','tikun_klali.json','shir_hashirim.json','perek_shira.json','kolel-logo.jpg','carta-kolel-firmada.jpg','assets','texts','privacy.html','terms.html','delete-account.html','licenses.html'])await cp(name,`dist/${name}`,{recursive:true});
 await cp('node_modules/@supabase/supabase-js/dist/umd/supabase.js','dist/assets/supabase.js');
+await cp('node_modules/@capacitor/core/dist/capacitor.js','dist/assets/capacitor-core.js');
+await cp('node_modules/@capacitor/local-notifications/dist/plugin.js','dist/assets/local-notifications.js');
 const paths=[];async function walk(dir){for(const item of await readdir(dir,{withFileTypes:true})){const p=`${dir}/${item.name}`;if(item.isDirectory())await walk(p);else paths.push(p.replace('dist/','./'));}}await walk('dist');
 const version=createHash('sha256');for(const p of paths)version.update(await readFile(p.replace('./','dist/')));
 const cache='tbj-'+version.digest('hex').slice(0,12);

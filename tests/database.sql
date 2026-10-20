@@ -22,5 +22,8 @@ update public.mercadopago_payments set status='approved' where id=current_settin
 do $$begin if (select count(*) from public.room_contributions where payment_id=current_setting('test.payment')::uuid and published)<>1 then raise exception 'Contribution not idempotent';end if;end $$;
 update public.mercadopago_payments set status='refunded' where id=current_setting('test.payment')::uuid;
 do $$begin if exists(select 1 from public.room_contributions where payment_id=current_setting('test.payment')::uuid and published) then raise exception 'Refund still published';end if;end $$;
+set local role service_role;
+select public.tbj_cleanup_account('00000000-0000-0000-0000-000000000000'::uuid);
+reset role;
 select 'PASS: private room isolation, invitation access, admin cleanup privilege, sandbox exclusion, contribution idempotency and refunds' as verification;
 rollback;
