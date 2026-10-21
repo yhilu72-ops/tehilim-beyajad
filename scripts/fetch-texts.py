@@ -27,10 +27,28 @@ def leaves(n,path=[]):
   for c in n['nodes']:yield from leaves(c,p)
  else:yield ', '.join(p),h
 ALLOWED={'Public Domain','CC0','CC-BY','CC-BY-SA'}
+# The siddur's copied biblical edition lacks license metadata. Read the
+# independently licensed canonical passage instead; do not infer a license.
+CANONICAL_SECTIONS={
+ 'Siddur Ashkenaz, Weekday, Shacharit, Post Service, Ten Commandments':
+  ('Exodus 20:2-14','Tanach with Nikkud',13),
+}
+def canonical_section(ref,label):
+ passage,version,expected=CANONICAL_SECTIONS[ref]
+ d=get(passage,version=version)
+ lines=flat(d.get('he',[]))
+ if d.get('heLicense') not in ALLOWED or len(lines)!=expected:
+  raise ValueError('Canonical section incomplete or unlicensed: '+passage)
+ return {'title':label,'hebrew':lines,
+  'source':'https://www.sefaria.org/'+passage.replace(' ','_'),
+  'version':d.get('heVersionTitle'),'license':d.get('heLicense'),
+  'canonicalRef':passage,'editorialNote':'Biblical verse divisions preserved; HTML removed.'}
 def import_sidur(nusach,title):
  index=get(title,True); entries=list(leaves(index['schema']));out={'title':title,'source':'https://www.sefaria.org/'+title.replace(' ','_'),'sections':{}}
  def one(entry):
-  ref,label=entry;d=get(ref)
+  ref,label=entry
+  if ref in CANONICAL_SECTIONS:return ref,canonical_section(ref,label)
+  d=get(ref)
   if not flat(d.get('he',[])):return ref,{'title':label,'hebrew':[]}
   if d.get('heLicense') not in ALLOWED:
    for v in d.get('versions',[]):

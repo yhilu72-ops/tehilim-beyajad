@@ -1,0 +1,55 @@
+{
+  "checkedAt": "2026-10-21T01:31:43.959Z",
+  "first": {
+    "status": 200,
+    "data": {
+      "preferenceId": "3546561536-fd581752-09c2-4213-808e-c02849254c9f",
+      "externalReference": "dfe07dc1-7d96-413f-8449-d601f20b56d2",
+      "checkoutUrl": "https://www.mercadopago.com.mx/checkout/v1/redirect?pref_id=3546561536-fd581752-09c2-4213-808e-c02849254c9f",
+      "environment": "sandbox",
+      "amount": 180,
+      "currency": "MXN",
+      "plan": "bronce"
+    }
+  },
+  "retry": {
+    "status": 200,
+    "data": {
+      "preferenceId": "3546561536-fd581752-09c2-4213-808e-c02849254c9f",
+      "externalReference": "dfe07dc1-7d96-413f-8449-d601f20b56d2",
+      "checkoutUrl": "https://www.mercadopago.com.mx/checkout/v1/redirect?pref_id=3546561536-fd581752-09c2-4213-808e-c02849254c9f",
+      "environment": "sandbox",
+      "amount": 180,
+      "currency": "MXN",
+      "plan": "bronce",
+      "reused": true
+    }
+  },
+  "conflict": {
+    "status": 409,
+    "data": {
+      "error": "Este intento ya corresponde a otra aportaci\u00f3n.",
+      "code": "REQUEST_CONFLICT"
+    }
+  },
+  "assertions": {
+    "sandbox": true,
+    "amount": true,
+    "currency": true,
+    "samePreference": true,
+    "reused": true,
+    "conflictRejected": true
+  },
+  "database": {
+    "rows": 1,
+    "status": "pending",
+    "providerPaymentId": null,
+    "temporaryAccountDeleted": true,
+    "paymentHistoryPreserved": true
+  },
+  "checkoutBrowser": {
+    "result": "generic_access_error",
+    "message": "Hubo un error accediendo a esta pagina...",
+    "purchaseCompleted": false
+  }
+}

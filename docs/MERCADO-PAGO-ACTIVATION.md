@@ -1,6 +1,26 @@
 # Mercado Pago — estado comprobado y activación pendiente
 
-## Diagnóstico confirmado el 20/10/2026 a las 19:25 UTC
+## Actualización comprobada — 21/10/2026, 01:31 UTC
+
+**El bloqueo de credenciales está resuelto.** El titular sustituyó el token en Supabase. El diagnóstico administrativo de las 01:27 UTC verificó vendedor `3546561536`, país `MLM`, etiqueta `test_user` y entorno `sandbox`; las cuatro comprobaciones devolvieron `true`. La aplicación observada es `2199523174965454` (`TestApp-3d6c8192`). La presencia del secreto de webhook no demuestra que su firma corresponda a esa aplicación.
+
+Se ejecutó la función desplegada con una cuenta temporal autenticada:
+
+- Creación: HTTP **200**, importe **180 MXN**, preferencia `3546561536-fd581752-09c2-4213-808e-c02849254c9f`.
+- Repetición del mismo intento: HTTP **200**, misma preferencia y `reused: true`.
+- Mismo intento cambiando de plan: HTTP **409**, `REQUEST_CONFLICT`.
+- Consulta PostgreSQL: un registro `pending`, `provider_payment_id: null`. No es un pago aprobado.
+- La cuenta temporal se eliminó mediante el endpoint de la app; el registro de pago se conservó anonimizado (`user_id` nulo). No se borró historial de pagos.
+
+[Evidencia de las respuestas, sin credenciales](evidence/mp-sandbox-preference-20261021.json).
+
+Al abrir la preferencia nueva, Mercado Pago mostró de nuevo «Hubo un error accediendo a esta pagina...» en el navegador en la nube. No se completó la compra. El siguiente paso indispensable es completar Checkout Pro con el comprador sandbox y verificar la notificación auténtica. No se activaron producción ni cobros móviles; no se realizaron cargos.
+
+La URL usa `init_point`, también para usuarios de prueba, según la [documentación oficial de Mercado Pago](https://www.mercadopago.com.mx/developers/es/news/2023/11/16/Questions-on-how-to-test-your-integration--). No cambiarla a `sandbox_init_point` para intentar corregir un error de acceso del navegador.
+
+Los apartados históricos siguientes conservan la evidencia del problema anterior; ya no describen la credencial actual.
+
+## Diagnóstico histórico del 20/10/2026 a las 19:25 UTC
 
 Se ejecutó `diagnose-mercadopago` v9 desde el panel autenticado de Supabase, con `{"mode":"configuration"}`. Respuesta real HTTP 200. La comprobación solo hizo consultas de lectura al proveedor; no creó preferencias ni cargos y no consultó registros de pagos.
 
@@ -54,7 +74,7 @@ No se creó una preferencia, no se abrió checkout, no se ejecutó ningún pago.
 
 Funciones actuales: `create-mercadopago-preference` v13, `mercadopago-webhook` v13. Migración añadida: `checkout_retry_guard` (tres columnas y un índice único, sin eliminar historial).
 
-## Bloqueo concreto
+## Bloqueo anterior de credenciales — resuelto el 21/10/2026
 
 La credencial almacenada corresponde a una cuenta mexicana que no se identifica como usuario de prueba y cuyo vendedor no coincide con el esperado. La página de desarrolladores de Mercado Pago muestra un error de acceso en la sesión disponible; no se ha obtenido acceso al panel del titular. No se han cambiado credenciales ni activado producción.
 
@@ -74,7 +94,7 @@ Variables del servidor que deben quedar coherentes, sin revelar sus valores:
 
 ## Verificación todavía necesaria
 
-1. Crear una preferencia con el vendedor y comprador de pruebas correctos.
+1. Creación de preferencia y deduplicación: verificadas el 21/10/2026. Falta completar el checkout con el comprador de pruebas correcto.
 2. Completar Checkout Pro con medios simulados oficiales, incluyendo estados aprobado, pendiente y rechazado.
 3. Recibir una notificación auténtica de Mercado Pago, repetirla y comprobar una sola publicación/registro.
 4. Probar pérdida de respuesta, retorno al dispositivo y estado consultado desde la app.
