@@ -406,6 +406,8 @@ Deno.serve(async (req: Request) => {
             containsWhitespace: /\s/.test(accessToken),
             containsQuotes: /["']/.test(accessToken),
             hasBearerPrefix: /^Bearer\s/i.test(accessToken),
+            looksLikePublicKey: /^(?:APP_USR|TEST)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(accessToken),
+            hasRecognizedTokenStructure: /^(?:APP_USR|TEST)-\d+-\d+-[a-zA-Z0-9]+-\d+$/.test(accessToken),
           } },
         checks: { tokenVerified: verified, collectorMatches, mexicanAccount, accountMatchesEnvironment },
         readyForCheckoutTest: verified && collectorMatches && mexicanAccount && accountMatchesEnvironment && webhookSecretConfigured,

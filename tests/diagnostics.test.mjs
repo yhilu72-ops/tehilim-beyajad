@@ -4,9 +4,9 @@ import {readFile} from 'node:fs/promises';
 import {stripTypeScriptTypes} from 'node:module';
 import vm from 'node:vm';
 
-async function setup({ownerId='3546561536',testUser=true,site='MLM',webhook=true,ownerStatus=200,ownerError=null,adminKeys='{"default":"sb_secret_test_only"}',legacyAdmin='admin-test-secret'}={}) {
+async function setup({ownerId='3546561536',testUser=true,site='MLM',webhook=true,ownerStatus=200,ownerError=null,providerToken='provider-test-secret',adminKeys='{"default":"sb_secret_test_only"}',legacyAdmin='admin-test-secret'}={}) {
   let handler; const requests=[];
-  const env={SUPABASE_SERVICE_ROLE_KEY:legacyAdmin,SUPABASE_SECRET_KEYS:adminKeys,SUPABASE_URL:'https://example.supabase.co',MERCADO_PAGO_ACCESS_TOKEN:'provider-test-secret',MERCADO_PAGO_WEBHOOK_SECRET:webhook?'signature-test-secret':undefined};
+  const env={SUPABASE_SERVICE_ROLE_KEY:legacyAdmin,SUPABASE_SECRET_KEYS:adminKeys,SUPABASE_URL:'https://example.supabase.co',MERCADO_PAGO_ACCESS_TOKEN:providerToken,MERCADO_PAGO_WEBHOOK_SECRET:webhook?'signature-test-secret':undefined};
   const source=await readFile('supabase/functions/diagnose-mercadopago/index.ts','utf8');
   vm.runInNewContext(stripTypeScriptTypes(source.replace(/^import .*;\n/,'')),{
     Deno:{env:{get:key=>env[key]},serve:fn=>handler=fn},Response,URLSearchParams,AbortSignal,console,Date,
@@ -36,6 +36,21 @@ test('Provider policy denial is classified without leaking arbitrary error conte
   assert.equal(data.readyForCheckoutTest,false);
   assert.equal(JSON.stringify(data).includes('provider-test-secret'),false);
   assert.equal(JSON.stringify(data).includes('private@example.test'),false);
+});
+
+test('Credential shape hints are redacted and never substitute for provider verification',async()=>{
+  for(const [providerToken,publicKey,structure] of [
+    ['APP_USR-00000000-0000-0000-0000-000000000000',true,false],
+    ['APP_USR-123-456-synthetic-789',false,true],
+    ['synthetic-incomplete',false,false],
+  ]) {
+    const x=await setup({providerToken,ownerStatus:403});
+    const data=await(await x.handler(x.request('Bearer admin-test-secret'))).json();
+    assert.equal(data.configuration.credentialFormat.looksLikePublicKey,publicKey);
+    assert.equal(data.configuration.credentialFormat.hasRecognizedTokenStructure,structure);
+    assert.equal(data.readyForCheckoutTest,false);
+    assert.equal(JSON.stringify(data).includes(providerToken),false);
+  }
 });
 test('Current administrative secret key works without a legacy JWT',async()=>{
   const x=await setup({legacyAdmin:null});const r=await x.handler(x.request('','sb_secret_test_only'));
