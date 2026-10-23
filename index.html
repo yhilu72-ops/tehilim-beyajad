@@ -3766,6 +3766,14 @@ section.screen.router-active{display:block!important}
       <p class="muted" id="realRoomMeta">Sala #1842 &#183; M&#233;xico</p>
       <div id="roomOnlineReadersV89" class="onlineReadersBadgeV89">🟢 0 leyendo ahora</div>
     </div>
+    <div id="joinRoomStatus" class="joinStatus"></div>
+    <button id="joinRoomBtn" class="btn block" onclick="joinSelectedRoom()">Unirme a esta sala</button>
+    <div class="tbj-room-reading" id="tbjRoomReadingPanel">
+      <div class="tbj-reading-heading"><span aria-hidden="true">📖</span><h3>Mis capítulos</h3></div>
+      <p id="tbjRoomReadingSummary">Consultando tus capítulos…</p>
+      <a class="btn block" id="tbjRoomReadingOpen" href="#mis_capitulos">Leer mis capítulos</a>
+      <a class="smallLink" href="#seleccionar">Elegir más capítulos</a>
+    </div>
     <div class="progress"><i style="width:0%"></i></div>
     <div id="latestDonationBannerV52" class="latestDonationBannerV52"></div>
     <div class="realProgressBox">
@@ -3790,14 +3798,6 @@ section.screen.router-active{display:block!important}
       </div>
 
       <div id="roomProgressComplete" class="realProgressComplete">&#127881; &#161;Tehilim completo!</div>
-    </div>
-    <div id="joinRoomStatus" class="joinStatus"></div>
-    <button id="joinRoomBtn" class="btn block" onclick="joinSelectedRoom()">Unirme a esta sala</button>
-    <div class="tbj-room-reading" id="tbjRoomReadingPanel">
-      <div class="tbj-reading-heading"><span aria-hidden="true">📖</span><h3>Mis capítulos</h3></div>
-      <p id="tbjRoomReadingSummary">Consultando tus capítulos…</p>
-      <a class="btn block" id="tbjRoomReadingOpen" href="#mis_capitulos">Leer mis capítulos</a>
-      <a class="smallLink" href="#seleccionar">Elegir más capítulos</a>
     </div>
     <div class="realToolsGrid">
       <a class="realToolBtn" href="#buenos_deseos" onclick="loadWishesForSelectedRoom && loadWishesForSelectedRoom()"><span>&#10024;</span>Buenos deseos</a>

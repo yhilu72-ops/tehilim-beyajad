@@ -46,8 +46,13 @@
     context = null; rows = []; loadedChapter = ''; listSignature = ''; chosenChapter = 0; generation++;
     $('tbjMyReadingList').replaceChildren();
     $('tbjMyReadingDone').hidden = true;
+    $('tbjMyReadingDoneList').textContent = '';
+    $('tbjMyReadingContext').textContent = '';
     $('tbjRoomReaderText').replaceChildren();
     $('tbjRoomReaderComplete').disabled = true;
+    $('tbjRoomReaderNext').hidden = true;
+    $('tbjRoomReaderTitle').textContent = 'Mi lectura';
+    $('tbjRoomReaderContext').textContent = '';
     $('tbjRoomReadingSummary').textContent = 'Entra a la sala para ver tus capítulos.';
   }
   async function call(name, args) {
