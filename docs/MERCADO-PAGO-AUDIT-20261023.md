@@ -16,3 +16,7 @@ No se activó producción ni se realizaron cargos.
 - Pendiente: ejecutar diagnóstico 1.3, resolver rechazo según evidencia, verificar credencial/webhook de la misma aplicación, configurar producción, probar checkout y recepción auténtica. Los cobros dentro de la app móvil siguen sujetos a la ruta permitida por las tiendas.
 
 Documentación consultada: https://developers.mercadolibre.com.mx/es_mx/error-403 y https://www.mercadopago.com.mx/developers/es/docs/checkout-api-orders/resources/credentials?scope=prod
+
+## Verificación remota posterior — 23 octubre 20:15 UTC
+
+Diagnóstico 1.3 ejecutado con éxito mediante panel autenticado. Sin espacios externos/internos, comillas ni prefijo Bearer añadido en la credencial. Todas las consultas de identidad devolvieron HTTP 403, clasificación provider_policy_denied. Esto no prueba que la credencial sea válida ni determina qué política falló; descarta esos cuatro errores de formato concretos. Continúa sandbox con collector de prueba. El panel de la aplicación de Mercado Pago muestra «Hubo un error accediendo a esta pagina...» en este navegador. No se cambió el token ni el entorno y no se realizó ningún cargo. Siguiente paso: revisión del estado/permisos de la aplicación con acceso al panel de Mercado Pago o soporte del proveedor; no repetir reemplazos sin evidencia.
