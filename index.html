@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#f5f0e7">
 <title>Tehilim BeYajad</title>
 <link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="assets/room-reading.css">
 <style>
 :root{
   --bg:#faf6ef;--card:#fffdfa;--ink:#1f2d3d;--muted:#6c7888;--line:#eadfd0;
@@ -3412,9 +3413,9 @@ section.screen.router-active{display:block!important}
     <div id="chapterClaimStatus" class="chapterStatus" style="display:none!important" aria-hidden="true"></div>
     <div id="chapterSeatStatusFinal" class="chapterStatus seatFinalStatus" aria-live="polite"></div>
 
-    <button id="chapterSeatConfirmFinal" type="button" class="btn block">Confirmar capítulos reservados</button>
+    <button id="chapterSeatConfirmFinal" type="button" class="btn block">Tomar estos capítulos</button>
     <a class="btn soft block" href="#sala_shabbat">🕯️ Shabbat</a>
-    <button id="chapterSeatCompleteFinal" type="button" class="btn soft block">Ya leí mis capítulos</button>
+    <button id="chapterSeatCompleteFinal" type="button" class="btn soft block">Ver y leer mis capítulos</button>
     <a class="btn soft block" href="#sala_real">Volver a la sala</a>
   </div>
 </section>
@@ -3792,14 +3793,19 @@ section.screen.router-active{display:block!important}
     </div>
     <div id="joinRoomStatus" class="joinStatus"></div>
     <button id="joinRoomBtn" class="btn block" onclick="joinSelectedRoom()">Unirme a esta sala</button>
-    <a class="btn block" href="#seleccionar">Comenzar a leer</a>
+    <div class="tbj-room-reading" id="tbjRoomReadingPanel">
+      <div class="tbj-reading-heading"><span aria-hidden="true">📖</span><h3>Mis capítulos</h3></div>
+      <p id="tbjRoomReadingSummary">Consultando tus capítulos…</p>
+      <a class="btn block" id="tbjRoomReadingOpen" href="#mis_capitulos">Leer mis capítulos</a>
+      <a class="smallLink" href="#seleccionar">Elegir más capítulos</a>
+    </div>
     <div class="realToolsGrid">
       <a class="realToolBtn" href="#buenos_deseos" onclick="loadWishesForSelectedRoom && loadWishesForSelectedRoom()"><span>&#10024;</span>Buenos deseos</a>
       <a class="realToolBtn" href="#kabalot_v58" onclick="loadKabalotV58 && loadKabalotV58()"><span>&#129309;</span>Kabalot</a>
       <a class="realToolBtn" href="#donar" onclick="prepareDonationRoom && prepareDonationRoom()"><span>&#128155;</span>Dedicar aportaci&#243;n</a>
       <a class="realToolBtn" href="#compartir_sala_v65" onclick="loadShareRoomV65()"><span>&#128228;</span>Compartir</a>
       <a class="realToolBtn" href="#mas_opciones_final_v83" onclick="loadOptionsV66()"><span>&#9881;&#65039;</span>M&#225;s opciones</a>
-      <a class="realToolBtn" href="#seleccionar" onclick="loadTakenChaptersForSelectedRoom && loadTakenChaptersForSelectedRoom()"><span>&#128214;</span>Progreso</a>
+      <a class="realToolBtn" href="#mis_capitulos"><span>&#128214;</span>Mis capítulos</a>
     </div>
   </div>
 <div class="card"><h3>Aportaciones confirmadas</h3><div id="tbjContributions"></div><a href="#reportar">Reportar contenido de esta sala</a></div></section>
@@ -11116,6 +11122,7 @@ async function confirmHolds(){
     setStatus("info",confirmed.length
       ? `Ya tienes confirmados: ${confirmed.join(", ")}.`
       : "Toca capítulos disponibles para reservarlos.");
+    if(confirmed.length)location.hash="#mis_capitulos";
     return;
   }
 
@@ -11143,6 +11150,7 @@ async function confirmHolds(){
     render();
     setStatus("good",`Capítulos confirmados para ti: ${confirmed.join(", ")}.`,12000);
     await refresh(true);
+    if(confirmed.length)location.hash="#mis_capitulos";
   }catch(error){
     setStatus("bad",error.message||String(error),0);
   }finally{
@@ -11245,7 +11253,7 @@ function stop(){
 
 $("chapterSeatGridFinal")?.addEventListener("click",onGridClick);
 $("chapterSeatConfirmFinal")?.addEventListener("click",confirmHolds);
-$("chapterSeatCompleteFinal")?.addEventListener("click",completeClaims);
+$("chapterSeatCompleteFinal")?.addEventListener("click",()=>{location.hash="#mis_capitulos";});
 
 window.tbjSeatRefreshFinal=()=>refresh(true);
 
@@ -11253,7 +11261,7 @@ window.tbjSeatRefreshFinal=()=>refresh(true);
    cualquier botón viejo que todavía llame estas funciones termina en el sistema RPC final,
    nunca en los upserts históricos. */
 window.claimSelectedChapters=confirmHolds;
-window.completeMyClaimedChapters=completeClaims;
+window.completeMyClaimedChapters=()=>{location.hash="#mis_capitulos";};
 window.loadTakenChaptersForSelectedRoom=()=>refresh(true);
 
 window.addEventListener("hashchange",()=>{
@@ -11345,6 +11353,28 @@ setTimeout(()=>{if(location.hash==="#seleccionar")start();},700);
 <section id="estado_aportacion" class="screen"><div class="top"><a class="circle" href="#perfil">‹</a><h2>Estado de mi aportación</h2></div><div class="card"><p id="tbjPaymentStatus" role="status" aria-live="polite"></p><button class="btn" id="tbjCheckPayment">Consultar de nuevo</button><p class="muted">La confirmación se consulta al servidor. Regresar de Mercado Pago no significa que el pago haya sido aprobado.</p></div></section>
 <section id="reportar" class="screen"><div class="top"><a class="circle" href="#perfil">‹</a><h2>Reportar contenido</h2></div><div class="card"><label>Describe el problema<textarea id="tbjReportText" maxlength="2000" rows="5"></textarea></label><button class="btn" id="tbjReportSend">Enviar reporte</button><p id="tbjReportStatus" role="status" aria-live="polite"></p><p>Contacto: <a href="mailto:yhilu72@gmail.com">yhilu72@gmail.com</a></p><h3>Bloquear participantes</h3><div id="tbjBlockList"></div></div></section>
 
+<section id="mis_capitulos" class="screen tbj-reading-page">
+  <div class="top"><a class="circle" href="#sala_real" aria-label="Volver a la sala">‹</a><h2>Mis capítulos</h2></div>
+  <div class="card">
+    <p class="muted" id="tbjMyReadingContext"></p>
+    <p>Lee aquí o en tu libro. Al terminar cada capítulo, márcalo como leído para sumar tu lectura a la sala.</p>
+    <p class="tbj-reading-status" id="tbjMyReadingStatus" role="status" aria-live="polite"></p>
+    <div id="tbjMyReadingList" class="tbj-reading-list"></div>
+    <details id="tbjMyReadingDone" hidden><summary id="tbjMyReadingDoneCount">Leídos por mí</summary><p id="tbjMyReadingDoneList"></p></details>
+    <div class="tbj-reading-actions" style="margin-top:20px"><a class="btn soft" href="#seleccionar">Elegir más capítulos</a><button class="btn soft" type="button" id="tbjReadingRetry">Actualizar</button></div>
+  </div>
+</section>
+<section id="leer_sala" class="screen tbj-reading-page">
+  <div class="top"><a class="circle" href="#mis_capitulos" aria-label="Volver a mis capítulos">‹</a><h2 id="tbjRoomReaderTitle">Mi lectura</h2></div>
+  <div class="card">
+    <p class="muted" id="tbjRoomReaderContext"></p>
+    <div class="tbj-reading-tools"><label>Texto<select id="tbjRoomReaderLanguage"><option value="he">Hebreo</option><option value="both">Hebreo e inglés</option><option value="en">Inglés</option></select></label><label>Letra<select id="tbjRoomReaderFont"><option value="26">Mediana</option><option value="30">Grande</option><option value="36">Muy grande</option></select></label></div>
+    <div id="tbjRoomReaderText"></div>
+    <p class="tbj-reading-source">Hebreo: Tanach with Nikkud. Inglés: JPS 1917. Textos de dominio público, obtenidos de Sefaria.</p>
+    <p class="tbj-reading-status" id="tbjRoomReaderStatus" role="status" aria-live="polite"></p>
+    <div class="tbj-reader-actions"><button class="btn green block" type="button" id="tbjRoomReaderComplete" disabled>Ya terminé este capítulo</button><button class="btn block" type="button" id="tbjRoomReaderNext" hidden>Leer mi siguiente capítulo</button><a class="btn soft block" href="#mis_capitulos">Volver a mis capítulos</a><button class="btn soft" type="button" id="tbjReaderRetry">Actualizar lectura</button></div>
+  </div>
+</section>
 <script src="assets/capacitor-core.js"></script>
 <script src="assets/local-notifications.js"></script>
 <script src="assets/app-plugin.js"></script>
@@ -11353,4 +11383,5 @@ setTimeout(()=>{if(location.hash==="#seleccionar")start();},700);
 <script src="assets/reminders.js"></script>
 <script src="assets/release.js"></script>
 <script src="assets/room-integrity.js"></script>
+<script src="assets/room-reading.js"></script>
 </body></html>
