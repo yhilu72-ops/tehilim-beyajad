@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {stripTypeScriptTypes} from 'node:module';
 import vm from 'node:vm';
 
-async function setup({ownerId='3546561536',testUser=true,site='MLM',webhook=true,ownerStatus=200,adminKeys='{"default":"sb_secret_test_only"}',legacyAdmin='admin-test-secret'}={}) {
+async function setup({ownerId='3546561536',testUser=true,site='MLM',webhook=true,ownerStatus=200,ownerError=null,adminKeys='{"default":"sb_secret_test_only"}',legacyAdmin='admin-test-secret'}={}) {
   let handler; const requests=[];
   const env={SUPABASE_SERVICE_ROLE_KEY:legacyAdmin,SUPABASE_SECRET_KEYS:adminKeys,SUPABASE_URL:'https://example.supabase.co',MERCADO_PAGO_ACCESS_TOKEN:'provider-test-secret',MERCADO_PAGO_WEBHOOK_SECRET:webhook?'signature-test-secret':undefined};
   const source=await readFile('supabase/functions/diagnose-mercadopago/index.ts','utf8');
@@ -13,7 +13,7 @@ async function setup({ownerId='3546561536',testUser=true,site='MLM',webhook=true
     createClient:()=>{throw Error('Configuration diagnostics must not query the database');},
     fetch:async (url,options)=>{
       requests.push({url,options});assert.equal(options.method??'GET','GET');
-      return new Response(JSON.stringify(url.includes('/applications/')?{id:123,name:'Test application',owner_id:ownerId}:
+      return new Response(JSON.stringify(url.endsWith('/users/me') && ownerError ? ownerError : url.includes('/applications/')?{id:123,name:'Test application',owner_id:ownerId}:
         {id:ownerId,site_id:site,tags:testUser?['test_user']:[],email:'private@example.test',password:'private-password',address:{street_name:'private-address'}}),
         {status:url.endsWith('/users/me')?ownerStatus:200});
     },
@@ -27,6 +27,15 @@ test('Administrative Bearer token reaches read-only configuration diagnostics',a
   assert.equal(response.status,200);const data=await response.json();assert.equal(data.readyForCheckoutTest,true);
   assert.equal(data.checks.collectorMatches,true);assert.equal(x.requests.length,4);
   const text=JSON.stringify(data);for(const secret of ['admin-test-secret','provider-test-secret','signature-test-secret','private@example.test','private-password','private-address'])assert.equal(text.includes(secret),false);
+});
+
+test('Provider policy denial is classified without leaking arbitrary error content',async()=>{
+  const x=await setup({ownerStatus:403,ownerError:{code:'PA_UNAUTHORIZED',message:'Policy denied provider-test-secret private@example.test'}});
+  const data=await(await x.handler(x.request('Bearer admin-test-secret'))).json();
+  assert.equal(data.identityChecks.tokenOwner.reason,'provider_policy_denied');
+  assert.equal(data.readyForCheckoutTest,false);
+  assert.equal(JSON.stringify(data).includes('provider-test-secret'),false);
+  assert.equal(JSON.stringify(data).includes('private@example.test'),false);
 });
 test('Current administrative secret key works without a legacy JWT',async()=>{
   const x=await setup({legacyAdmin:null});const r=await x.handler(x.request('','sb_secret_test_only'));

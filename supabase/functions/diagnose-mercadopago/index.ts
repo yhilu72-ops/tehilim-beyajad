@@ -280,7 +280,17 @@ async function identityChecks(accessToken: string) {
         headers: { Authorization: `Bearer ${accessToken}` },
         signal: AbortSignal.timeout(10000),
       });
-      if (!response.ok) return { httpStatus: response.status, verified: false };
+      if (!response.ok) {
+        // Classify locally; never echo arbitrary provider messages or credentials.
+        const failure = await response.json().catch(() => ({}));
+        const description = JSON.stringify(failure).toLowerCase();
+        const reason = description.includes("policy") || description.includes("pa_unauthorized")
+          ? "provider_policy_denied"
+          : description.includes("expired") ? "credential_expired"
+          : description.includes("invalid_token") || description.includes("invalid access token")
+          ? "credential_invalid" : "provider_access_denied_unclassified";
+        return { httpStatus: response.status, verified: false, reason };
+      }
       const data = await response.json();
       if (kind === "application") return {
         httpStatus: response.status, verified: true,
@@ -387,10 +397,16 @@ Deno.serve(async (req: Request) => {
       const accountMatchesEnvironment = verified && (environment === "sandbox" ? owner.testUser === true : owner.testUser === false);
       const webhookSecretConfigured = !!Deno.env.get("MERCADO_PAGO_WEBHOOK_SECRET");
       return jsonResponse({
-        diagnosticVersion: "1.2", mode: "configuration", checkedAt: new Date().toISOString(),
+        diagnosticVersion: "1.3", mode: "configuration", checkedAt: new Date().toISOString(),
         configuration: { environment, expectedCollector: expectedCollector || null,
           explicitTestCollector: !!Deno.env.get("MERCADO_PAGO_TEST_COLLECTOR_ID"),
-          accessTokenConfigured: true, webhookSecretConfigured },
+          accessTokenConfigured: true, webhookSecretConfigured,
+          credentialFormat: {
+            surroundingWhitespace: accessToken !== accessToken.trim(),
+            containsWhitespace: /\s/.test(accessToken),
+            containsQuotes: /["']/.test(accessToken),
+            hasBearerPrefix: /^Bearer\s/i.test(accessToken),
+          } },
         checks: { tokenVerified: verified, collectorMatches, mexicanAccount, accountMatchesEnvironment },
         readyForCheckoutTest: verified && collectorMatches && mexicanAccount && accountMatchesEnvironment && webhookSecretConfigured,
         identityChecks: identities,
