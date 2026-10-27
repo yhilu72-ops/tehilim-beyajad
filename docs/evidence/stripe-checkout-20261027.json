@@ -1,0 +1,14 @@
+{
+  "id": "cs_test_a1G9a78wVSPaLvSXtGV9afpDlpaoyBgqLm8trjjxe0ICD9XiVYaw90YaLF",
+  "livemode": false,
+  "amount_total": 18000,
+  "currency": "mxn",
+  "payment_status": "unpaid",
+  "status": "open",
+  "created": 1793075011,
+  "expires_at": 1793078570,
+  "mode": "hosted_page",
+  "verification": "Provider API created an unpaid sandbox Checkout Session; not an end-to-end app payment.",
+  "runtime_api_version": "2026-09-30.endive",
+  "sdk_version": "23.0.1"
+}

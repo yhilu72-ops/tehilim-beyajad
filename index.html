@@ -3507,7 +3507,7 @@ section.screen.router-active{display:block!important}
     <label class="checkboxLine"><input id="donationAnonymousInput" type="checkbox"> Mostrar como an&#243;nimo</label>
     <div class="donationPreview" id="donationPreviewBox">Se mostrar&#225; un aviso en la sala con tu aportaci&#243;n dedicada.</div>
     <div id="donationStatus" class="donationStatus"></div>
-    <div class="actions centered"><button id="mercadoPagoRoomButton" class="btn" onclick="publishDonationReal()">Continuar a Mercado Pago</button><a class="btn soft" href="#fondos">&#191;A d&#243;nde van?</a></div>
+    <div class="actions centered"><button id="mercadoPagoRoomButton" class="btn" onclick="publishDonationReal()">Continuar al pago seguro</button><a class="btn soft" href="#fondos">&#191;A d&#243;nde van?</a></div>
   </div>
 </section>
 
@@ -3677,7 +3677,7 @@ section.screen.router-active{display:block!important}
     <h1>Aportaciones</h1>
     <div class="aportesDivider">&#10022;</div>
   </div>
-  <div class="aportesGrid"><a class="tierChoice" href="#" onclick="startGeneralMercadoPago('bronce',event)"><span class="tierArt bronze"><span class="ingot"></span><span class="seal">B</span></span><h3>Bronce</h3><div class="tierOrnament">&#10022;</div><div class="tierPrice">$180 <small>MXN</small></div><div class="tierLaurel">&#8249;&#8249; &#8250;&#8250;</div></a><a class="tierChoice" href="#" onclick="startGeneralMercadoPago('plata',event)"><span class="tierArt silver"><span class="ingot"></span><span class="seal">&#9733;</span></span><h3>Plata</h3><div class="tierOrnament">&#10022;</div><div class="tierPrice">$360 <small>MXN</small></div><div class="tierLaurel">&#8249;&#8249; &#8250;&#8250;</div></a><a class="tierChoice" href="#" onclick="startGeneralMercadoPago('oro',event)"><span class="tierArt gold"><span class="ingot"></span><span class="seal">&#9733;</span></span><h3>Oro</h3><div class="tierOrnament">&#10022;</div><div class="tierPrice">$720 <small>MXN</small></div><div class="tierLaurel">&#8249;&#8249; &#8250;&#8250;</div></a><a class="tierChoice diamond" href="#" onclick="startGeneralMercadoPago('diamante',event)"><span class="diamondEmoji">&#128142;</span><h3>Diamante</h3><div class="tierOrnament">&#10022;</div><div class="tierPrice">$1,800 <small>MXN</small></div><div class="tierLaurel">&#8249;&#8249; &#8250;&#8250;</div></a></div><div id="generalMercadoPagoStatus" class="donationStatus" aria-live="polite"></div>
+  <div class="aportesGrid"><a class="tierChoice" href="#" onclick="startGeneralContribution('bronce',event)"><span class="tierArt bronze"><span class="ingot"></span><span class="seal">B</span></span><h3>Bronce</h3><div class="tierOrnament">&#10022;</div><div class="tierPrice">$180 <small>MXN</small></div><div class="tierLaurel">&#8249;&#8249; &#8250;&#8250;</div></a><a class="tierChoice" href="#" onclick="startGeneralContribution('plata',event)"><span class="tierArt silver"><span class="ingot"></span><span class="seal">&#9733;</span></span><h3>Plata</h3><div class="tierOrnament">&#10022;</div><div class="tierPrice">$360 <small>MXN</small></div><div class="tierLaurel">&#8249;&#8249; &#8250;&#8250;</div></a><a class="tierChoice" href="#" onclick="startGeneralContribution('oro',event)"><span class="tierArt gold"><span class="ingot"></span><span class="seal">&#9733;</span></span><h3>Oro</h3><div class="tierOrnament">&#10022;</div><div class="tierPrice">$720 <small>MXN</small></div><div class="tierLaurel">&#8249;&#8249; &#8250;&#8250;</div></a><a class="tierChoice diamond" href="#" onclick="startGeneralContribution('diamante',event)"><span class="diamondEmoji">&#128142;</span><h3>Diamante</h3><div class="tierOrnament">&#10022;</div><div class="tierPrice">$1,800 <small>MXN</small></div><div class="tierLaurel">&#8249;&#8249; &#8250;&#8250;</div></a></div><div id="generalMercadoPagoStatus" class="donationStatus" aria-live="polite"></div>
   <p class="center" style="margin-top:10px"><a class="smallLink" href="#fondos">&#191;A d&#243;nde van las aportaciones?</a></p>
 </section>
 
@@ -5677,7 +5677,7 @@ function updateDonationPreviewReal(){
   const room=selectedRoomNameReal();
   box.innerHTML=`<b>${safeText(anon?"An\u{F3}nimo":donor)}</b> dedicar\u{E1} una <b>Aportaci\u{F3}n ${safeText(selectedDonationTierReal.name)}</b> de <b>$${selectedDonationTierReal.amount} MXN</b> en m\u{E9}rito de <b>${safeText(room)}</b>.`;
 }
-// Payment initiation is implemented once in assets/release.js.
+// Payment initiation is implemented once in assets/contributions.js.
 
 // Mejora buenos deseos: actualizar t\u{ED}tulo y permitir descarga.
 const oldUpdateWishesRoomInfoV47 = typeof updateWishesRoomInfo === "function" ? updateWishesRoomInfo : null;
@@ -11279,7 +11279,7 @@ setTimeout(()=>{if(location.hash==="#seleccionar")start();},700);
 
 
 
-<!-- Checkout is maintained in assets/release.js. -->
+<!-- Checkout is maintained in assets/contributions.js. -->
 
 
 <section id="restablecer" class="screen">
@@ -11350,7 +11350,7 @@ setTimeout(()=>{if(location.hash==="#seleccionar")start();},700);
 
 
 
-<section id="estado_aportacion" class="screen"><div class="top"><a class="circle" href="#perfil">‹</a><h2>Estado de mi aportación</h2></div><div class="card"><p id="tbjPaymentStatus" role="status" aria-live="polite"></p><button class="btn" id="tbjCheckPayment">Consultar de nuevo</button><p class="muted">La confirmación se consulta al servidor. Regresar de Mercado Pago no significa que el pago haya sido aprobado.</p></div></section>
+<section id="estado_aportacion" class="screen"><div class="top"><a class="circle" href="#perfil">‹</a><h2>Estado de mi aportación</h2></div><div class="card"><p id="tbjPaymentStatus" role="status" aria-live="polite"></p><button class="btn" id="tbjCheckPayment">Consultar de nuevo</button><p class="muted">La confirmación se consulta al servidor. Regresar de la página de pago no significa que el pago haya sido aprobado.</p></div></section>
 <section id="reportar" class="screen"><div class="top"><a class="circle" href="#perfil">‹</a><h2>Reportar contenido</h2></div><div class="card"><label>Describe el problema<textarea id="tbjReportText" maxlength="2000" rows="5"></textarea></label><button class="btn" id="tbjReportSend">Enviar reporte</button><p id="tbjReportStatus" role="status" aria-live="polite"></p><p>Contacto: <a href="mailto:yhilu72@gmail.com">yhilu72@gmail.com</a></p><h3>Bloquear participantes</h3><div id="tbjBlockList"></div></div></section>
 
 <section id="mis_capitulos" class="screen tbj-reading-page">
@@ -11382,6 +11382,7 @@ setTimeout(()=>{if(location.hash==="#seleccionar")start();},700);
 <script src="assets/native.js"></script>
 <script src="assets/reminders.js"></script>
 <script src="assets/release.js"></script>
+<script src="assets/contributions.js"></script>
 <script src="assets/room-integrity.js"></script>
 <script src="assets/room-reading.js"></script>
 </body></html>
