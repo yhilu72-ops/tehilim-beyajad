@@ -1,4 +1,4 @@
-# Stripe integration — 27 October 2026
+# Stripe integration — 26 October 2026 (Mexico City)
 
 ## Verified account and scope
 
@@ -56,6 +56,20 @@ Signing secrets were saved directly to encrypted Supabase Vault as `tbj_stripe_w
 - A real sandbox API call created an **unpaid** Checkout Session for exactly 18,000 MXN cents. See `docs/evidence/stripe-checkout-20261027.json`. No test card was charged and no app fulfillment was exercised by this call.
 - The provider call caught a version change: `ui_mode=hosted` is rejected by the current API; corrected to `hosted_page` and then verified with Stripe.
 
+## Remote build verification
+
+- Implemented commit: `4b41bff0f2035788e02082488968e079c849ca25`, draft PR https://github.com/yhilu72-ops/tehilim-beyajad/pull/3.
+- GitHub Actions run https://github.com/yhilu72-ops/tehilim-beyajad/actions/runs/40450042641 completed successfully for web, Android and iOS.
+- Android: debug APK and release AAB compiled; connected instrumentation tests passed in the Android emulator, including packaged offline startup. The release bundle is not a verified store-signed distribution.
+- iOS: Debug iOS Simulator build and simulator smoke check passed with `CODE_SIGNING_ALLOWED=NO`. This is not a signed iPhone/App Store archive.
+- Build artifacts in that run: `android-test-builds` (12710730433), `ios-simulator-build` (12710850363). GitHub retention is seven days; source and workflow remain reproducible.
+- Vercel preview `dpl_aKejWfkZXYnfVAbkQyyKB6ShPNtx` is READY, from the implemented commit. Preview: https://tehilim-beyajad-aerrg9fz6-yhilu72-ops-projects.vercel.app/ . HTTP 200 and updated contribution assets were verified. This does not verify a completed payment.
+- Official production remains on `fd072394ea0dae93131f10dfcbd2ddcd9cbe41d5`; the payment branch has not been merged or promoted.
+
+## Sandbox account correction
+
+The dedicated sandbox had an overdue representative-address task that disabled test payments and payouts. Its pre-generated fictitious address lacked state, municipality, locality and street-number fields; the special test value in the street field also failed the Dashboard format validator. Completed those fields with clearly fictitious test address data in the sandbox only. Stripe returned to Account status with **No hay tareas activas pendientes**. No live identity or bank details were modified by this correction. Actual test payment acceptance still requires the remaining integration test.
+
 ## Remaining activation work — do not claim complete
 
 The connector's OAuth authorization does not install a Stripe API credential in the app server. Edge secrets still need:
@@ -65,11 +79,13 @@ The connector's OAuth authorization does not install a Stripe API credential in 
 
 Use restricted keys. Required API operations: own account retrieval, Checkout Session creation/retrieval, inline Price/Product creation as required by Checkout, PaymentIntent/Charge/Dispute retrieval. No refund creation, payout, transfer or bank-account modification is implemented. Confirm exact key permission dependencies with the Stripe form and real sandbox requests. Never commit or send secret values through chat.
 
+Both Dashboard key forms are prepared but not submitted: **Tehilim Supabase - pruebas** and **Tehilim Supabase - producción**. Each review screen shows exactly seven permissions: Accounts, Charges and Refunds, Payment Disputes and Payment Intents = Read; Checkout Sessions, Prices and Products = Write. No payouts, transfers, refunds-write or banking permissions. The account owner must complete the credential-creation action and save each value directly into the corresponding Supabase Edge Function secret above. Authorizing the ChatGPT connector does not provision these backend keys.
+
 After test key installation: enable sandbox checkout only, test the authenticated app flow with approved/declined/asynchronous test methods, observe signed event delivery and order updates, resend an event, refund a test payment and verify that no dedication is published. Also verify cross-user lookup and UI privacy. Only after this should live settings be enabled and the frontend promoted. A real charge still requires specific user authorization.
 
 Native payment buttons remain gated. Apple requires store billing for digital upgrades, with regional exceptions; approved nonprofit fundraising has separate conditions. Google distinguishes digital purchases and tax-exempt donations. This mixed support/developer contribution is not claimed to be an approved tax-exempt nonprofit. The new Stripe work does not resolve native billing eligibility, signed store packages, physical-device testing, remaining religious texts or full English/Hebrew UI.
 
-Sources checked 27 October 2026:
+Sources checked 26 October 2026 (Mexico City; evidence filenames use UTC date):
 - https://developer.apple.com/app-store/review/guidelines/ (3.1.1, 3.2.1, 3.2.2)
 - https://support.google.com/googleplay/android-developer/answer/9858738
 - https://supabase.com/docs/guides/functions/examples/stripe-webhooks
