@@ -24,7 +24,7 @@ async function refresh(){
     const auth=await sb.auth.getUser();
     if(ticket!==generation||window.selectedRealRoom?.id!==roomId)return;
     if(auth.error||!auth.data?.user){message('Inicia sesión para ver las aportaciones de la sala.');return;}
-    const result=await sb.from('room_contributions').select('donor_name,message,anonymous,plan,created_at').eq('room_id',roomId).eq('published',true).order('created_at',{ascending:false}).limit(100);
+    const result=await sb.from('room_verified_contributions').select('donor_name,message,anonymous,plan,created_at').eq('room_id',roomId).eq('published',true).order('created_at',{ascending:false}).limit(100);
     if(ticket!==generation||window.selectedRealRoom?.id!==roomId)return;
     if(result.error)throw result.error;
     const items=result.data||[];

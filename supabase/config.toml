@@ -19,3 +19,12 @@ verify_jwt = false
 
 [functions.delete-account]
 verify_jwt = false
+
+# These authenticate Supabase users in the handler, including ownership checks.
+[functions.create-stripe-checkout]
+verify_jwt = false
+[functions.stripe-payment-status]
+verify_jwt = false
+# Stripe authenticates signed raw webhook bodies; a Supabase JWT isn't supplied.
+[functions.stripe-webhook]
+verify_jwt = false
